@@ -1,0 +1,167 @@
+STRUCTURE VISUELLE DU DASHBOARD ECODISTRIBUTION
+===============================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ EcoDistribution                                                             │
+│ Tableau de bord décisionnel                                                 │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│ ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐ ┌───────────────┐ │
+│ │   CA HT         │ │   Marge brute   │ │   Commandes     │ │ Clients actifs│ │
+│ │ €125,450.50     │ │ €28,950.75      │ │      156        │ │      45       │ │
+│ │ ▲ +12.5%        │ │ ▲ +8.3%         │ │ ▼ -2.1%         │ │ ▲ +5.7%       │ │
+│ └─────────────────┘ └─────────────────┘ └─────────────────┘ └───────────────┘ │
+│                                                                             │
+│ ┌─────────────────────────────────────┐ ┌─────────────────────────────────┐ │
+│ │     Évolution des ventes (6 mois)    │ │         Top 5 produits           │ │
+│ │                                     │ │                                 │ │
+│ │    €                               │ │     ● Nettoyant Multi-Usage      │ │
+│ │    €                               │ │     ● Lessive Liquide Éco        │ │
+│ │    €                               │ │     ● Sachet Compostable         │ │
+│ │    €                               │ │     ● Gourde Inox                │ │
+│ │    €                               │ │     ● Savon Liquide Éco          │ │
+│ │                                     │ │                                 │ │
+│ └─────────────────────────────────────┘ └─────────────────────────────────┘ │
+│                                                                             │
+│ ┌─────────────────────────────────────┐ ┌─────────────────────────────────┐ │
+│ │         Alertes stocks               │ │    Indicateurs de performance    │ │
+│ │                                     │ │                                 │ │
+│ │ Produit                    Entrepôt  │ │    ○ 95%  Taux service client    │ │
+│ │ Savon Liquide Éco          Lyon     │ │    ○ 78%  Rotation stocks        │ │
+│ │ Boîte Conservation Verre    Marseille│ │    ○ 23.5% Marge moyenne         │ │
+│ │ Sachet Compostable         Lille    │ │    ○ 89%  Livraisons ponctuelles│ │
+│ │                                     │ │                                 │ │
+│ └─────────────────────────────────────┘ └─────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+MENU LATÉRAL:
+┌─────────────────┐
+│ 🏠 Tableau de bord│
+│ 📈 Analyse ventes │
+│ 📦 Gestion stocks │
+│ 👥 Analyse clients│
+│ ⚙️ Paramètres     │
+└─────────────────┘
+
+ANALYSE DES VENTES:
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ [Période: 6 mois ▼] [Région: Toutes ▼] [Segment: Tous ▼]                   │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│ ┌─────────────────────────────────────┐ ┌─────────────────────────────────┐ │
+│ │       Évolution des ventes           │ │      Ventes par segment          │ │
+│ │                                     │ │                                 │ │
+│ │    €                               │ │     ● Grands comptes 47%        │ │
+│ │    €                               │ │     ● Comptes moyens 36%         │ │
+│ │    €                               │ │     ● Petits comptes 17%         │ │
+│ │    €                               │ │                                 │ │
+│ │    €                               │ │                                 │ │
+│ │                                     │ │                                 │ │
+│ └─────────────────────────────────────┘ └─────────────────────────────────┘ │
+│                                                                             │
+│ ┌─────────────────────────────────────────────────────────────────────────┐ │
+│ │                     Ventes par région                                   │ │
+│ │                                                                         │ │
+│ │   ████████████████████████████████████████████████████████████████████   │ │
+│ │   Auvergne-Rhône-Alpes    ████████████████████████████████████████████   │ │
+│ │   PACA                    ████████████████████████████████████████       │ │
+│ │   Hauts-de-France         ████████████████████████████████               │ │
+│ └─────────────────────────────────────────────────────────────────────────┘ │
+│                                                                             │
+│ ┌─────────────────────────────────────┐ ┌─────────────────────────────────┐ │
+│ │           Top produits               │ │     Performance commerciaux     │ │
+│ │                                     │ │                                 │ │
+│ │ Produit              | Qté | CA    │ │ Commercial    | CA    | Marge │ │
+│ │ Nettoyant Multi-Usage| 245 |10,290€│ │ Sophie Durand |45,600€|12,450€│ │
+│ │ Lessive Liquide Éco | 189 | 8,750€│ │ Thomas Bernard|38,900€| 9,870€│ │
+│ │ Sachet Compostable  | 567 | 7,890€│ │ Claire Petit   |28,950€| 6,230€│ │
+│ └─────────────────────────────────────┘ └─────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+GESTION DES STOCKS:
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ [Entrepôt: Tous ▼] [Famille: Toutes ▼] [Période: 30 jours ▼]               │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│ ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐ ┌───────────────┐ │
+│ │ Produits réf.   │ │ Alertes stocks  │ │ Surstocks       │ │ Taux rotation │ │
+│ │       20        │ │       3         │ │       2         │ │     78%      │ │
+│ └─────────────────┘ └─────────────────┘ └─────────────────┘ └───────────────┘ │
+│                                                                             │
+│ ┌─────────────────────────────────────┐ ┌─────────────────────────────────┐ │
+│ │       Évolution valeur stocks       │ │       Mouvements récents        │ │
+│ │                                     │ │                                 │ │
+│ │    €                               │ │   ███ Entrées                    │ │
+│ │    €                               │ │   ████ Sorties                   │ │
+│ │    €                               │ │                                 │ │
+│ │    €                               │ │                                 │ │
+│ │    €                               │ │                                 │ │
+│ │                                     │ │                                 │ │
+│ └─────────────────────────────────────┘ └─────────────────────────────────┘ │
+│                                                                             │
+│ ┌─────────────────────────────────────────────────────────────────────────┐ │
+│ │                           État des stocks                                │ │
+│ │ Produit                    | Stock | Seuil | Statut    | Valeur         │ │
+│ │ Nettoyant Multi-Usage     |  245  |   20  | NORMAL    |   612,50€     │ │
+│ │ Savon Liquide Éco          |   45  |   60  | ⚠️ALERTE  |    81,00€     │ │
+│ │ Sachet Compostable         |  850  |  100  | ⚠️SURSTOCK|   127,50€     │ │
+│ │ Gourde Inox                |   78  |   30  | NORMAL    |   429,00€     │ │
+│ └─────────────────────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+ANALYSE CLIENTS:
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ [Segment: Tous ▼] [Période: 12 mois ▼]                                     │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│ ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐ ┌───────────────┐ │
+│ │ Clients actifs  │ │ Nouveaux clients│ │ Rentabilité moy │ │ Panier moyen  │ │
+│ │       45        │ │       3         │ │     24.8%      │ │     38€       │ │
+│ │ ▲ +5.7%         │ │ ▲ +25%          │ │ ▼ -1.2%        │ │ ▲ +8.3%       │ │
+│ └─────────────────┘ └─────────────────┘ └─────────────────┘ └───────────────┘ │
+│                                                                             │
+│ ┌─────────────────────────────────────┐ ┌─────────────────────────────────┐ │
+│ │       Évolution clients actifs      │ │      Nouveaux clients/mois       │ │
+│ │                                     │ │                                 │ │
+│ │    45                               │ │   ███                            │ │
+│ │    43                               │ │   ████                           │ │
+│ │    41                               │ │   ██                             │ │
+│ │    38                               │ │   ████                           │ │
+│ │    35                               │ │   ███                            │ │
+│ │                                     │ │                                 │ │
+│ └─────────────────────────────────────┘ └─────────────────────────────────┘ │
+│                                                                             │
+│ ┌─────────────────────────────────────────────────────────────────────────┐ │
+│ │                        Top clients rentabilité                           │ │
+│ │ Client                    | CA     | Marge  | Rentabilité | Segment      │ │
+│ │ Supermarché BioStore      |45,600€ |12,450€ |   27.3%    | Grand compte │ │
+│ │ Hôtel Les Oliviers        |23,400€ | 6,780€ |   28.9%    | Compte moyen │ │
+│ │ Bureau Conseil Alpha      |18,900€ | 4,560€ |   24.1%    | Compte moyen │ │
+│ │ Restaurant Le Gourmet    |12,450€ | 3,210€ |   25.8%    | Petit compte │ │
+│ └─────────────────────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+STYLE VISUEL:
+==============
+- Couleurs: Bleu #1890ff (principal), Vert #52c41a (succès), Rouge #ff4d4f (alerte)
+- Typographie: Police moderne, hiérarchie claire
+- Cartes: Coins arrondis, ombres subtiles
+- Icônes: Ant Design, cohérentes et intuitives
+- Graphiques: Recharts, interactifs avec tooltips
+- Tableaux: Triables, paginés, avec hover effects
+
+INTERACTIONS:
+=============
+- Filtres: Mise à jour instantanée des données
+- Graphiques: Tooltips au survol, zoom possible
+- Tableaux: Tri par colonne, pagination
+- Navigation: Menu latéral persistant
+- Responsive: Adaptation desktop/tablette
+
+DONNÉES RÉALISTES:
+==================
+- 5 clients: Supermarché BioStore, Hôtel Les Oliviers, Bureau Conseil Alpha, 
+  Restaurant Le Gourmet, École Primaire Verte
+- 20 produits: Nettoyants, lessives, emballages, gourdes, savons, etc.
+- 8 commandes avec différents statuts
+- KPI calculés avec tendances vs période précédente

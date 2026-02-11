@@ -1,0 +1,255 @@
+/* Styles principaux pour l'application EcoDistribution Dashboard */
+
+.logo {
+  padding: 24px 16px;
+  text-align: center;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.logo h2 {
+  margin: 0;
+  color: #1890ff;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.logo p {
+  margin: 4px 0 0;
+  color: #666;
+  font-size: 12px;
+}
+
+/* Styles pour les cartes KPI */
+.ant-card {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border-radius: 8px;
+}
+
+.ant-card-head {
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.ant-card-head-title {
+  font-weight: 600;
+}
+
+/* Styles pour les statistiques */
+.ant-statistic-title {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 4px;
+}
+
+.ant-statistic-content {
+  font-size: 24px;
+  font-weight: bold;
+}
+
+/* Styles pour les tableaux */
+.ant-table-thead > tr > th {
+  background-color: #fafafa;
+  font-weight: 600;
+}
+
+.ant-table-tbody > tr:hover > td {
+  background-color: #f5f5f5;
+}
+
+/* Styles pour les graphiques */
+.chart-container {
+  padding: 16px;
+  background: #fff;
+  border-radius: 8px;
+}
+
+/* Styles pour les tags */
+.ant-tag {
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+/* Styles pour les progress */
+.ant-progress-circle .ant-progress-text {
+  font-weight: bold;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .logo h2 {
+    font-size: 16px;
+  }
+  
+  .logo p {
+    font-size: 11px;
+  }
+  
+  .ant-statistic-content {
+    font-size: 20px;
+  }
+}
+
+/* Animations */
+.fade-in {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Styles pour les indicateurs de performance */
+.kpi-card {
+  text-align: center;
+  padding: 20px;
+}
+
+.kpi-value {
+  font-size: 28px;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.kpi-label {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 4px;
+}
+
+.kpi-trend {
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.trend-up {
+  color: #52c41a;
+}
+
+.trend-down {
+  color: #ff4d4f;
+}
+
+/* Styles pour les filtres */
+.filter-card {
+  margin-bottom: 24px;
+}
+
+.filter-card .ant-card-body {
+  padding: 16px 24px;
+}
+
+.filter-label {
+  font-weight: 500;
+  margin-right: 8px;
+  color: #333;
+}
+
+/* Styles pour les alertes */
+.alert-card {
+  border-left: 4px solid #ff4d4f;
+}
+
+.success-card {
+  border-left: 4px solid #52c41a;
+}
+
+.warning-card {
+  border-left: 4px solid #fa8c16;
+}
+
+/* Styles pour les tooltips personnalisés */
+.custom-tooltip {
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+/* Styles pour le chargement */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+}
+
+/* Styles pour le menu latéral */
+.ant-layout-sider {
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.06);
+}
+
+.ant-menu-item {
+  margin: 4px 8px;
+  border-radius: 6px;
+}
+
+.ant-menu-item:hover {
+  background-color: #f0f8ff;
+}
+
+.ant-menu-item-selected {
+  background-color: #e6f7ff;
+  color: #1890ff;
+}
+
+.ant-menu-item-selected::after {
+  display: none;
+}
+
+/* Styles pour l'en-tête */
+.ant-layout-header {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  z-index: 10;
+}
+
+/* Styles pour le contenu principal */
+.ant-layout-content {
+  background-color: #f5f5f5;
+}
+
+/* Scrollbar personnalisée */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Styles pour l'impression */
+@media print {
+  .ant-layout-sider,
+  .ant-layout-header {
+    display: none;
+  }
+  
+  .ant-layout {
+    margin-left: 0 !important;
+  }
+  
+  .ant-card {
+    box-shadow: none;
+    border: 1px solid #ddd;
+  }
+}

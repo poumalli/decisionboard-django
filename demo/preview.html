@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoDistribution - Preview Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            color: #1890ff;
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .kpi-card {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .kpi-value {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .kpi-label {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        
+        .kpi-trend {
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+        
+        .trend-up {
+            color: #52c41a;
+        }
+        
+        .trend-down {
+            color: #ff4d4f;
+        }
+        
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .chart-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .chart-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
+        .chart-placeholder {
+            height: 300px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .line-chart {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            position: relative;
+        }
+        
+        .line-chart::before {
+            content: '';
+            position: absolute;
+            bottom: 20px;
+            left: 30px;
+            right: 30px;
+            height: 2px;
+            background: rgba(255,255,255,0.3);
+        }
+        
+        .line-chart::after {
+            content: '';
+            position: absolute;
+            bottom: 20px;
+            left: 30px;
+            right: 30px;
+            height: 180px;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 180'%3E%3Cpath d='M10,160 Q40,80 70,100 T130,60 T190,40' stroke='rgba(255,255,255,0.9)' stroke-width='3' fill='none'/%3E%3Ccircle cx='10' cy='160' r='4' fill='rgba(255,255,255,0.9)'/%3E%3Ccircle cx='70' cy='100' r='4' fill='rgba(255,255,255,0.9)'/%3E%3Ccircle cx='130' cy='60' r='4' fill='rgba(255,255,255,0.9)'/%3E%3Ccircle cx='190' cy='40' r='4' fill='rgba(255,255,255,0.9)'/%3E%3C/svg%3E") no-repeat center;
+            background-size: contain;
+        }
+        
+        .pie-chart {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            position: relative;
+        }
+        
+        .pie-chart::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 140px;
+            height: 140px;
+            background: conic-gradient(
+                #ff6b6b 0deg 169deg,
+                #4ecdc4 169deg 299deg,
+                #45b7d1 299deg 360deg
+            );
+            border-radius: 50%;
+            box-shadow: 0 0 30px rgba(0,0,0,0.3);
+        }
+        
+        .pie-placeholder {
+            height: 300px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+        }
+        
+        .bottom-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .table-placeholder {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .mini-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        
+        .mini-table th,
+        .mini-table td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .mini-table th {
+            font-weight: 600;
+            color: #666;
+            font-size: 12px;
+        }
+        
+        .mini-table td {
+            font-size: 13px;
+        }
+        
+        .status-badge {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        
+        .status-alert {
+            background: #fff2f0;
+            color: #ff4d4f;
+            border: 1px solid #ffccc7;
+        }
+        
+        .status-warning {
+            background: #fffbe6;
+            color: #faad14;
+            border: 1px solid #ffe58f;
+        }
+        
+        .progress-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 15px;
+        }
+        
+        .progress-item {
+            text-align: center;
+        }
+        
+        .progress-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            font-size: 14px;
+        }
+        
+        .progress-label {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .menu-demo {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 250px;
+            height: 100vh;
+            background: white;
+            box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+            padding: 20px;
+            z-index: 1000;
+        }
+        
+        .menu-logo {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .menu-logo h2 {
+            color: #1890ff;
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+        
+        .menu-logo p {
+            color: #666;
+            font-size: 12px;
+        }
+        
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            margin-bottom: 8px;
+            color: #666;
+            text-decoration: none;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            font-size: 15px;
+            border: 2px solid transparent;
+        }
+
+        .menu-item:hover {
+            background: linear-gradient(135deg, #f0f8ff 0%, #e6f7ff 100%);
+            color: #1890ff;
+            transform: translateX(5px);
+            border-color: #1890ff;
+        }
+
+        .menu-item.active {
+            background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+            color: #fff;
+            font-weight: 600;
+            box-shadow: 0 6px 20px rgba(24, 144, 255, 0.3);
+            border-color: #1890ff;
+        }
+
+        .menu-item span {
+            margin-right: 12px;
+            font-size: 18px;
+        }
+        
+        .main-content {
+            margin-left: 270px;
+        }
+        
+        @media (max-width: 768px) {
+            .menu-demo {
+                transform: translateX(-100%);
+            }
+            .main-content {
+                margin-left: 0;
+            }
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+            .bottom-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Menu Latéral -->
+    <div class="menu-demo">
+        <div class="menu-logo">
+            <h2>EcoDistribution</h2>
+            <p>Tableau de bord décisionnel</p>
+        </div>
+        <a href="preview.html" class="menu-item active"><span>🏠</span>Tableau de bord</a>
+        <a href="sales_analytics.html" class="menu-item"><span>📈</span>Analyse des ventes</a>
+        <a href="inventory_analytics.html" class="menu-item"><span>📦</span>Gestion des stocks</a>
+        <a href="customer_analytics.html" class="menu-item"><span>👥</span>Analyse clients</a>
+        <a href="settings.html" class="menu-item"><span>⚙️</span>Configuration</a>
+    </div>
+
+    <!-- Contenu Principal -->
+    <div class="main-content">
+        <div class="container">
+            <!-- Header -->
+            <div class="header">
+                <h1>Plateforme Décisionnelle</h1>
+                <p>EcoDistribution - Tableau de bord stratégique</p>
+            </div>
+
+            <!-- KPI Grid -->
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-value" style="color: #3f8600;">€125,450.50</div>
+                    <div class="kpi-label">Chiffre d'affaires HT</div>
+                    <div class="kpi-trend trend-up">▲ +12.5% vs mois dernier</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-value" style="color: #3f8600;">€28,950.75</div>
+                    <div class="kpi-label">Marge brute</div>
+                    <div class="kpi-trend trend-up">▲ +8.3% vs mois dernier</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-value" style="color: #1890ff;">156</div>
+                    <div class="kpi-label">Commandes</div>
+                    <div class="kpi-trend trend-down">▼ -2.1% vs mois dernier</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-value" style="color: #722ed1;">45</div>
+                    <div class="kpi-label">Clients actifs</div>
+                    <div class="kpi-trend trend-up">▲ +5.7% vs mois dernier</div>
+                </div>
+            </div>
+
+            <!-- Charts Grid -->
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <div class="chart-title">Évolution des ventes (6 derniers mois)</div>
+                    <div class="chart-placeholder">
+                        📈 Courbe d'évolution du CA
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-title">Top 5 produits</div>
+                    <div class="pie-placeholder">
+                        🥧 Camembert des produits
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Grid -->
+            <div class="bottom-grid">
+                <!-- Alertes Stocks -->
+                <div class="table-placeholder">
+                    <div class="chart-title">
+                        <span style="color: #ff4d4f; margin-right: 8px;">⚠️</span>
+                        Alertes stocks
+                    </div>
+                    <table class="mini-table">
+                        <thead>
+                            <tr>
+                                <th>Produit</th>
+                                <th>Entrepôt</th>
+                                <th>Stock</th>
+                                <th>Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Savon Liquide Éco</td>
+                                <td>Lyon</td>
+                                <td>45</td>
+                                <td><span class="status-badge status-alert">ALERTE</span></td>
+                            </tr>
+                            <tr>
+                                <td>Boîte Conservation Verre</td>
+                                <td>Marseille</td>
+                                <td>8</td>
+                                <td><span class="status-badge status-alert">ALERTE</span></td>
+                            </tr>
+                            <tr>
+                                <td>Sachet Compostable</td>
+                                <td>Lille</td>
+                                <td>850</td>
+                                <td><span class="status-badge status-warning">SURSTOCK</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Indicateurs Performance -->
+                <div class="table-placeholder">
+                    <div class="chart-title">Indicateurs de performance</div>
+                    <div class="progress-grid">
+                        <div class="progress-item">
+                            <div class="progress-circle" style="background: #52c41a;">95%</div>
+                            <div class="progress-label">Taux de service client</div>
+                        </div>
+                        <div class="progress-item">
+                            <div class="progress-circle" style="background: #1890ff;">78%</div>
+                            <div class="progress-label">Taux rotation stocks</div>
+                        </div>
+                        <div class="progress-item">
+                            <div class="progress-circle" style="background: #722ed1;">23.5%</div>
+                            <div class="progress-label">Marge moyenne</div>
+                        </div>
+                        <div class="progress-item">
+                            <div class="progress-circle" style="background: #fa8c16;">89%</div>
+                            <div class="progress-label">Livraisons ponctuelles</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Animation simple au chargement
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.kpi-card, .chart-card, .table-placeholder');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    card.style.transition = 'all 0.5s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+
+            // Simulation de données dynamiques
+            const kpiValues = document.querySelectorAll('.kpi-value');
+            setInterval(() => {
+                kpiValues.forEach(kpi => {
+                    if (Math.random() > 0.7) {
+                        kpi.style.transform = 'scale(1.05)';
+                        setTimeout(() => {
+                            kpi.style.transform = 'scale(1)';
+                        }, 200);
+                    }
+                });
+            }, 3000);
+        });
+    </script>
+</body>
+</html>

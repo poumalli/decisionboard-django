@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuration - EcoDistribution</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #1890ff;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 16px;
+        }
+        
+        .menu-demo {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 250px;
+            height: 100vh;
+            background: white;
+            box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+            padding: 20px;
+            z-index: 1000;
+        }
+        
+        .menu-logo {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .menu-logo h2 {
+            color: #1890ff;
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+        
+        .menu-logo p {
+            color: #666;
+            font-size: 12px;
+        }
+        
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            margin-bottom: 8px;
+            color: #666;
+            text-decoration: none;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            font-size: 15px;
+            border: 2px solid transparent;
+        }
+
+        .menu-item:hover {
+            background: linear-gradient(135deg, #f0f8ff 0%, #e6f7ff 100%);
+            color: #1890ff;
+            transform: translateX(5px);
+            border-color: #1890ff;
+        }
+
+        .menu-item.active {
+            background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+            color: #fff;
+            font-weight: 600;
+            box-shadow: 0 6px 20px rgba(24, 144, 255, 0.3);
+            border-color: #1890ff;
+        }
+
+        .menu-item span {
+            margin-right: 12px;
+            font-size: 18px;
+        }
+        
+        .main-content {
+            margin-left: 270px;
+        }
+        
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .settings-card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .settings-card h3 {
+            color: #1890ff;
+            font-size: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .settings-card h3 .icon {
+            font-size: 24px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #1890ff;
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        .switch-group {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: #1890ff;
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+        }
+        
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+        
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+        
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status-success {
+            background: #f6ffed;
+            color: #52c41a;
+            border: 1px solid #b7eb8f;
+        }
+        
+        .status-warning {
+            background: #fffbe6;
+            color: #fa8c16;
+            border: 1px solid #ffe58f;
+        }
+        
+        .status-error {
+            background: #fff2f0;
+            color: #ff4d4f;
+            border: 1px solid #ffccc7;
+        }
+        
+        .etl-status {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 25px;
+        }
+        
+        .etl-status h3 {
+            color: #1890ff;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+        
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .status-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .status-label {
+            font-weight: 500;
+            color: #666;
+        }
+        
+        @media (max-width: 768px) {
+            .menu-demo {
+                transform: translateX(-100%);
+            }
+            .main-content {
+                margin-left: 0;
+            }
+            .settings-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Menu Latéral -->
+    <div class="menu-demo">
+        <div class="menu-logo">
+            <h2>EcoDistribution</h2>
+            <p>Tableau de bord décisionnel</p>
+        </div>
+        <a href="preview.html" class="menu-item"><span>🏠</span>Tableau de bord</a>
+        <a href="sales_analytics.html" class="menu-item"><span>📈</span>Analyse des ventes</a>
+        <a href="inventory_analytics.html" class="menu-item"><span>📦</span>Gestion des stocks</a>
+        <a href="customer_analytics.html" class="menu-item"><span>👥</span>Analyse clients</a>
+        <a href="settings.html" class="menu-item active"><span>⚙️</span>Configuration</a>
+    </div>
+
+    <!-- Contenu Principal -->
+    <div class="main-content">
+        <div class="container">
+            <!-- Header -->
+            <div class="header">
+                <h1>Configuration du Système</h1>
+                <p>Paramètres généraux, utilisateurs, KPI et sources de données</p>
+            </div>
+
+            <!-- Statut ETL -->
+            <div class="etl-status">
+                <h3>🔄 Statut ETL et Sources de Données</h3>
+                <div class="status-grid">
+                    <div class="status-item">
+                        <span class="status-label">Dernier chargement</span>
+                        <span class="status-indicator status-success">09/02/2026 15:45</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Fréquence</span>
+                        <span>Quotidien 02:00</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Statut OLTP</span>
+                        <span class="status-indicator status-success">Connecté</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Statut DW</span>
+                        <span class="status-indicator status-success">Connecté</span>
+                    </div>
+                </div>
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="alert('ETL relancé avec succès!')">🔄 Relancer ETL</button>
+                    <button class="btn btn-secondary" onclick="alert('Logs ETL ouverts')">📋 Voir les logs</button>
+                </div>
+            </div>
+
+            <!-- Grille des paramètres -->
+            <div class="settings-grid">
+                <!-- Paramètres généraux -->
+                <div class="settings-card">
+                    <h3><span class="icon">🌍</span>Paramètres généraux</h3>
+                    
+                    <div class="form-group">
+                        <label for="currency">Devise</label>
+                        <select id="currency">
+                            <option value="EUR" selected>EUR (€)</option>
+                            <option value="CHF">CHF (Fr)</option>
+                            <option value="USD">USD ($)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="timezone">Fuseau horaire</label>
+                        <select id="timezone">
+                            <option value="Europe/Paris" selected>Europe/Paris</option>
+                            <option value="Europe/Zurich">Europe/Zurich</option>
+                            <option value="UTC">UTC</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="default-period">Période d'analyse par défaut</label>
+                        <select id="default-period">
+                            <option value="month" selected>Mois courant</option>
+                            <option value="quarter">Trimestre</option>
+                            <option value="year">Année</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="date-format">Format des dates</label>
+                        <select id="date-format">
+                            <option value="DD/MM/YYYY" selected>DD/MM/YYYY</option>
+                            <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+                            <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+                        </select>
+                    </div>
+                    
+                    <div class="button-group">
+                        <button class="btn btn-primary" onclick="alert('Paramètres généraux sauvegardés!')">💾 Sauvegarder</button>
+                    </div>
+                </div>
+
+                <!-- Gestion des utilisateurs -->
+                <div class="settings-card">
+                    <h3><span class="icon">👥</span>Gestion des utilisateurs & rôles</h3>
+                    
+                    <div class="form-group">
+                        <label for="new-user">Ajouter un utilisateur</label>
+                        <input type="text" id="new-user" placeholder="Nom d'utilisateur">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="user-email">Email</label>
+                        <input type="email" id="user-email" placeholder="email@exemple.com">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="user-role">Rôle</label>
+                        <select id="user-role">
+                            <option value="analyst">Analyste</option>
+                            <option value="manager">Manager</option>
+                            <option value="admin">Administrateur</option>
+                        </select>
+                    </div>
+                    
+                    <div class="switch-group">
+                        <span>Accès lecture seule</span>
+                        <label class="switch">
+                            <input type="checkbox">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="switch-group">
+                        <span>Peut modifier les KPI</span>
+                        <label class="switch">
+                            <input type="checkbox">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="button-group">
+                        <button class="btn btn-primary" onclick="alert('Utilisateur ajouté!')">➕ Ajouter</button>
+                        <button class="btn btn-secondary" onclick="alert('Liste des utilisateurs ouverte')">👥 Voir tous</button>
+                    </div>
+                </div>
+
+                <!-- Paramètres KPI -->
+                <div class="settings-card">
+                    <h3><span class="icon">📊</span>Paramètres des KPI</h3>
+                    
+                    <div class="switch-group">
+                        <span>Chiffre d'affaires HT</span>
+                        <label class="switch">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="switch-group">
+                        <span>Marge brute</span>
+                        <label class="switch">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="switch-group">
+                        <span>Taux de rotation stocks</span>
+                        <label class="switch">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="switch-group">
+                        <span>Taux de service client</span>
+                        <label class="switch">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="ca-threshold">Seuil d'alerte CA (€)</label>
+                        <input type="number" id="ca-threshold" value="100000" placeholder="100000">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="margin-target">Objectif marge (%)</label>
+                        <input type="number" id="margin-target" value="25" placeholder="25">
+                    </div>
+                    
+                    <div class="button-group">
+                        <button class="btn btn-primary" onclick="alert('Paramètres KPI sauvegardés!')">💾 Sauvegarder</button>
+                    </div>
+                </div>
+
+                <!-- Personnalisation dashboard -->
+                <div class="settings-card">
+                    <h3><span class="icon">🎨</span>Personnalisation du dashboard</h3>
+                    
+                    <div class="form-group">
+                        <label for="default-view">Vue par défaut</label>
+                        <select id="default-view">
+                            <option value="dashboard" selected>Tableau de bord</option>
+                            <option value="sales">Analyse des ventes</option>
+                            <option value="inventory">Gestion des stocks</option>
+                            <option value="customers">Analyse clients</option>
+                        </select>
+                    </div>
+                    
+                    <div class="switch-group">
+                        <span>Afficher graphiques en temps réel</span>
+                        <label class="switch">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="switch-group">
+                        <span>Animations et transitions</span>
+                        <label class="switch">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="switch-group">
+                        <span>Mode sombre</span>
+                        <label class="switch">
+                            <input type="checkbox">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="widget-order">Ordre des widgets</label>
+                        <textarea id="widget-order" placeholder="KPI, Ventes, Stocks, Clients...">KPI, Ventes, Stocks, Clients</textarea>
+                    </div>
+                    
+                    <div class="button-group">
+                        <button class="btn btn-primary" onclick="alert('Personnalisation sauvegardée!')">💾 Sauvegarder</button>
+                        <button class="btn btn-secondary" onclick="alert('Réinitialisation par défaut!')">🔄 Réinitialiser</button>
+                    </div>
+                </div>
+
+                <!-- Paramètres techniques -->
+                <div class="settings-card">
+                    <h3><span class="icon">⚙️</span>Paramètres techniques</h3>
+                    
+                    <div class="switch-group">
+                        <span>Mode démo</span>
+                        <label class="switch">
+                            <input type="checkbox">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="switch-group">
+                        <span>Mode débogage</span>
+                        <label class="switch">
+                            <input type="checkbox">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="switch-group">
+                        <span>Logs détaillés</span>
+                        <label class="switch">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="export-format">Export par défaut</label>
+                        <select id="export-format">
+                            <option value="pdf" selected>PDF</option>
+                            <option value="csv">CSV</option>
+                            <option value="excel">Excel</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="cache-duration">Durée cache (minutes)</label>
+                        <input type="number" id="cache-duration" value="30" placeholder="30">
+                    </div>
+                    
+                    <div class="button-group">
+                        <button class="btn btn-primary" onclick="alert('Paramètres techniques sauvegardés!')">💾 Sauvegarder</button>
+                        <button class="btn btn-secondary" onclick="alert('Vider le cache!')">🗑️ Vider cache</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animation au chargement
+            const cards = document.querySelectorAll('.settings-card, .etl-status');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    card.style.transition = 'all 0.5s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+
+            // Simulation de mise à jour du statut ETL
+            setInterval(() => {
+                const statusIndicators = document.querySelectorAll('.status-indicator');
+                statusIndicators.forEach(indicator => {
+                    if (Math.random() > 0.8) {
+                        indicator.style.transform = 'scale(1.05)';
+                        setTimeout(() => {
+                            indicator.style.transform = 'scale(1)';
+                        }, 200);
+                    }
+                });
+            }, 5000);
+        });
+    </script>
+</body>
+</html>
