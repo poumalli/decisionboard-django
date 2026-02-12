@@ -1,0 +1,145 @@
+{% extends "dashboard/base_dashboard.html" %}
+
+{% block title %}Analyse des revenus — DecisionBoard{% endblock %}
+{% block page_title %}Analyse des revenus{% endblock %}
+
+{% block extra_filters %}
+<div class="filter-group">
+    <label for="category">Catégorie</label>
+    <select name="category" id="category">
+        <option value="">Toutes</option>
+        {% for cat in all_categories %}
+        <option value="{{ cat }}" {% if cat == category_filter %}selected{% endif %}>{{ cat }}</option>
+        {% endfor %}
+    </select>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- KPI résumé -->
+<div class="kpi-grid kpi-grid-3">
+    <div class="kpi-card">
+        <div class="kpi-label">CA total HT</div>
+        <div class="kpi-value" data-format="0" data-raw="{{ total_revenue }}">{{ total_revenue|floatformat:0 }}</div>
+        <div class="kpi-unit">CHF</div>
+        <div class="kpi-trend {% if revenue_variation >= 0 %}trend-up{% else %}trend-down{% endif %}">
+            {% if revenue_variation >= 0 %}&#9650; +{% else %}&#9660; {% endif %}{{ revenue_variation }}%
+        </div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Missions facturées</div>
+        <div class="kpi-value">{{ total_missions }}</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Heures facturées</div>
+        <div class="kpi-value" data-format="0" data-raw="{{ total_hours }}">{{ total_hours }}</div>
+        <div class="kpi-unit">heures</div>
+    </div>
+</div>
+
+<!-- Graphiques -->
+<div class="charts-grid">
+    <div class="chart-card">
+        <h3>CA mensuel</h3>
+        <canvas id="monthlyBarChart"></canvas>
+    </div>
+    <div class="chart-card">
+        <h3>Répartition par catégorie</h3>
+        <canvas id="categoryDoughnut"></canvas>
+    </div>
+</div>
+
+<!-- Détail par service -->
+<div class="table-card">
+    <h3>Détail par service</h3>
+    {% if top_services %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th class="sortable">Service</th>
+                <th class="sortable">Catégorie</th>
+                <th class="sortable text-right" data-sort-num>CA HT</th>
+                <th class="sortable text-center" data-sort-num>Missions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in top_services %}
+            <tr>
+                <td>{{ row.service__name }}</td>
+                <td><span class="badge badge-category">{{ row.service__category }}</span></td>
+                <td class="text-right" data-raw="{{ row.revenue }}">{{ row.revenue|floatformat:0 }} CHF</td>
+                <td class="text-center" data-raw="{{ row.count }}">{{ row.count }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr class="total-row">
+                <td><strong>Total</strong></td>
+                <td></td>
+                <td class="text-right"><strong data-format="0" data-raw="{{ total_revenue }}">{{ total_revenue|floatformat:0 }} CHF</strong></td>
+                <td class="text-center"><strong>{{ total_missions }}</strong></td>
+            </tr>
+        </tfoot>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">&#128200;</div>
+        <div class="empty-state-title">Aucun service trouvé</div>
+        <div class="empty-state-text">Modifiez les filtres ou la période pour afficher des données.</div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- CA par client -->
+<div class="table-card">
+    <h3>CA par client</h3>
+    {% if by_client %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th class="sortable">Client</th>
+                <th class="sortable">Secteur</th>
+                <th class="sortable text-right" data-sort-num>CA HT</th>
+                <th class="sortable text-center" data-sort-num>Missions</th>
+                <th class="sortable text-right" data-sort-num>Moy./mission</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in by_client %}
+            <tr>
+                <td>{{ row.client__company_name }}</td>
+                <td>{{ row.client__sector }}</td>
+                <td class="text-right" data-raw="{{ row.revenue }}">{{ row.revenue|floatformat:0 }} CHF</td>
+                <td class="text-center" data-raw="{{ row.missions }}">{{ row.missions }}</td>
+                <td class="text-right" data-raw="{{ row.avg_mission }}">{{ row.avg_mission|floatformat:0 }} CHF</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr class="total-row">
+                <td><strong>Total</strong></td>
+                <td></td>
+                <td class="text-right"><strong data-format="0" data-raw="{{ total_revenue }}">{{ total_revenue|floatformat:0 }} CHF</strong></td>
+                <td class="text-center"><strong>{{ total_missions }}</strong></td>
+                <td></td>
+            </tr>
+        </tfoot>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">&#128101;</div>
+        <div class="empty-state-title">Aucun client trouvé</div>
+        <div class="empty-state-text">Modifiez les filtres ou la période pour afficher des données.</div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block page_scripts %}
+<script>
+    queueChart(function() {
+        initBarChart('monthlyBarChart', {{ monthly_labels|safe }}, {{ monthly_values|safe }}, 'CA HT (CHF)');
+        initDoughnutChart('categoryDoughnut', {{ category_labels|safe }}, {{ category_values|safe }});
+    });
+</script>
+{% endblock %}

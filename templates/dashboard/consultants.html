@@ -1,0 +1,138 @@
+{% extends "dashboard/base_dashboard.html" %}
+
+{% block title %}Performance consultants — DecisionBoard{% endblock %}
+{% block page_title %}Performance consultants{% endblock %}
+
+{% block content %}
+<!-- KPI résumé (5 cards) -->
+<div class="kpi-grid kpi-grid-5">
+    <div class="kpi-card">
+        <div class="kpi-label">Consultants</div>
+        <div class="kpi-value">{{ consultant_count }}</div>
+        <div class="kpi-subtitle">actifs sur la période</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Occupation moyenne</div>
+        <div class="kpi-value">{{ avg_utilization }}%</div>
+        <div class="kpi-subtitle">
+            {% if avg_utilization >= 70 %}
+            &#9989; Bon niveau
+            {% elif avg_utilization >= 40 %}
+            &#9888;&#65039; À surveiller
+            {% else %}
+            &#10060; Sous-capacité
+            {% endif %}
+        </div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Heures facturées</div>
+        <div class="kpi-value" data-format="0" data-raw="{{ total_hours }}">{{ total_hours }}</div>
+        <div class="kpi-unit">heures</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">CA total</div>
+        <div class="kpi-value" data-format="0" data-raw="{{ total_revenue }}">{{ total_revenue|floatformat:0 }}</div>
+        <div class="kpi-unit">CHF</div>
+    </div>
+    <div class="kpi-card kpi-card-accent">
+        <div class="kpi-label">CA / heure</div>
+        <div class="kpi-value" data-format="2" data-raw="{{ ca_per_hour }}">{{ ca_per_hour }}</div>
+        <div class="kpi-unit">CHF/h</div>
+    </div>
+</div>
+
+<!-- Graphiques -->
+<div class="charts-grid">
+    <div class="chart-card">
+        <h3>CA par consultant</h3>
+        <canvas id="consultantRevenueChart"></canvas>
+    </div>
+    <div class="chart-card">
+        <h3>Taux d'occupation individuel</h3>
+        {% if consultants %}
+        <div class="gauges-grid">
+            {% for c in consultants %}
+            <div class="gauge-item">
+                <div class="gauge-circle {% if c.utilization_rate >= 70 %}gauge-good{% elif c.utilization_rate >= 40 %}gauge-medium{% else %}gauge-low{% endif %}" style="--rate: {{ c.utilization_rate }}">
+                    <span class="gauge-value">{{ c.utilization_rate }}%</span>
+                </div>
+                <div class="gauge-label">{{ c.name }}</div>
+                <div class="gauge-sub">{{ c.hours }}h / {{ c.workable_hours }}h</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">&#128336;</div>
+            <div class="empty-state-title">Aucune donnée</div>
+            <div class="empty-state-text">Aucun consultant n'a facturé sur cette période.</div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Tableau détaillé -->
+<div class="table-card">
+    <h3>Détail par consultant</h3>
+    {% if consultants %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th class="sortable">Consultant</th>
+                <th class="sortable">Rôle</th>
+                <th class="sortable text-center" data-sort-num>Ancienneté</th>
+                <th class="sortable text-right" data-sort-num>CA HT</th>
+                <th class="sortable text-center" data-sort-num>Missions</th>
+                <th class="sortable text-center" data-sort-num>Heures</th>
+                <th class="sortable text-right" data-sort-num>CHF/h</th>
+                <th class="sortable text-center" data-sort-num>Occupation</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for c in consultants %}
+            <tr>
+                <td><strong>{{ c.name }}</strong></td>
+                <td><span class="badge badge-{{ c.role }}">{{ c.role }}</span></td>
+                <td class="text-center" data-raw="{{ c.seniority }}">{{ c.seniority }} an{{ c.seniority|pluralize:"s" }}</td>
+                <td class="text-right" data-raw="{{ c.revenue }}">{{ c.revenue|floatformat:0 }} CHF</td>
+                <td class="text-center" data-raw="{{ c.missions }}">{{ c.missions }}</td>
+                <td class="text-center" data-raw="{{ c.hours }}">{{ c.hours }}h</td>
+                <td class="text-right" data-raw="{{ c.ca_per_hour }}">{{ c.ca_per_hour }} CHF</td>
+                <td class="text-center" data-raw="{{ c.utilization_rate }}">
+                    <span class="badge {% if c.utilization_rate >= 70 %}badge-success{% elif c.utilization_rate >= 40 %}badge-warning{% else %}badge-danger{% endif %}">
+                        {{ c.utilization_rate }}%
+                    </span>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr class="total-row">
+                <td><strong>Total / Moy.</strong></td>
+                <td></td>
+                <td></td>
+                <td class="text-right"><strong data-format="0" data-raw="{{ total_revenue }}">{{ total_revenue|floatformat:0 }} CHF</strong></td>
+                <td class="text-center"><strong>—</strong></td>
+                <td class="text-center"><strong>{{ total_hours }}h</strong></td>
+                <td class="text-right"><strong>{{ ca_per_hour }} CHF</strong></td>
+                <td class="text-center"><span class="badge {% if avg_utilization >= 70 %}badge-success{% elif avg_utilization >= 40 %}badge-warning{% else %}badge-danger{% endif %}"><strong>{{ avg_utilization }}%</strong></span></td>
+            </tr>
+        </tfoot>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">&#128100;</div>
+        <div class="empty-state-title">Aucun consultant trouvé</div>
+        <div class="empty-state-text">Modifiez la période pour afficher les données de performance.</div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block page_scripts %}
+<script>
+    queueChart(function() {
+        initHorizontalBarChart('consultantRevenueChart', {{ consultant_names|safe }}, {{ consultant_revenues|safe }});
+    });
+</script>
+{% endblock %}

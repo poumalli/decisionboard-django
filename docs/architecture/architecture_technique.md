@@ -1,236 +1,165 @@
-# Architecture Technique - EcoDistribution
+# Architecture Technique — DecisionBoard
 
 ## Vue d'ensemble
 
-L'architecture de la plateforme décisionnelle EcoDistribution est basée sur une approche moderne et scalable, utilisant des technologies open-source éprouvées pour garantir performance, fiabilité et maintenabilité.
+Plateforme décisionnelle pour un cabinet de consulting suisse.
+Transforme les données opérationnelles (clients, missions, consultants, facturation) en indicateurs de pilotage via un dashboard web.
 
-## Architecture Globale
-
-```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Applications  │    │   Data Warehouse│    │   Base OLTP     │
-│   Dashboard     │    │   PostgreSQL    │    │   PostgreSQL    │
-│   (React)       │    │   (Schéma DW)   │    │   (Schéma OLTP)  │
-└─────────┬───────┘    └─────────┬───────┘    └─────────┬───────┘
-          │                      │                      │
-          │              ┌───────▼───────┐              │
-          │              │   Pipeline ETL │              │
-          │              │   (Python)     │              │
-          │              └───────┬───────┘              │
-          └──────────────┬───────▼───────┬──────────────┘
-                         │   Réseau      │
-                         └───────────────┘
-```
-
-## Composants Techniques
-
-### 1. Base de Données Opérationnelle (OLTP)
-
-**Technologie**: PostgreSQL 13+
-
-**Caractéristiques**:
-- Schéma normalisé 3NF
-- Transactions ACID
-- Indexation optimisée pour les requêtes transactionnelles
-- Triggers pour la cohérence des données
-
-**Tables principales**:
-- T_CLIENTS, T_PRODUITS, T_COMMANDES_CLIENTS
-- T_STOCKS, T_MOUVEMENTS_STOCKS
-- T_FACTURES, T_LIVRAISONS
-
-### 2. Data Warehouse
-
-**Technologie**: PostgreSQL 13+ (schéma dédié)
-
-**Architecture**: Schéma en étoile (Star Schema)
-
-**Dimensions**:
-- dim_temps: Hiérarchie temporelle complète
-- dim_client: Informations clients et segmentations
-- dim_produit: Caractéristiques produits et classifications
-- dim_commercial: Équipe commerciale
-- dim_entrepôt: Sites logistiques
-- dim_transporteur: Partenaires transport
-
-**Faits**:
-- fait_ventes: Ventes et marges
-- fait_stocks: Mouvements et valeurs stocks
-- fait_livraisons: Performance logistique
-- fait_facturation: Suivi financier
-
-### 3. Pipeline ETL
-
-**Technologie**: Python 3.9+
-
-**Librairies principales**:
-- SQLAlchemy: ORM et connexion DB
-- Pandas: Manipulation données
-- Psycopg2: Driver PostgreSQL
-
-**Architecture**:
-- Extraction depuis l'OLTP
-- Transformation avec règles métier
-- Loading dans le Data Warehouse
-- Vues matérialisées pour performance
-
-### 4. Dashboard Web
-
-**Technologie**: React 18+
-
-**Librairies principales**:
-- Ant Design: Composants UI
-- Recharts: Graphiques
-- Axios: Appels API
-- React Router: Navigation
-
-**Fonctionnalités**:
-- Tableau de bord principal avec KPI
-- Analytics détaillés par domaine
-- Filtres dynamiques
-- Export des données
-
-## Flux de Données
-
-### 1. Flux Transactionnel (temps réel)
+## Architecture globale
 
 ```
-Client → Application → Base OLTP → Réponse
+Base OLTP (PostgreSQL/SQLite)  →  ETL (Django ORM)  →  Data Warehouse  →  Dashboard Web
 ```
 
-### 2. Flux Analytique (batch)
+| Couche | Rôle | Technologie |
+|--------|------|-------------|
+| **OLTP** | Base opérationnelle (6 tables) | PostgreSQL / SQLite |
+| **ETL** | Pipeline d'alimentation du DW | Django Management Command |
+| **DW** | Schéma en étoile (4 dims + 1 fait) | PostgreSQL / SQLite |
+| **Dashboard** | Interface web avec KPIs | Django + Chart.js |
+
+## Stack technique
+
+| Composant | Technologie | Version |
+|-----------|-------------|---------|
+| Backend | Django | 4.2 |
+| Base de données | PostgreSQL / SQLite | 13+ |
+| Graphiques | Chart.js | 4.4 |
+| Serveur statique | WhiteNoise | 6.6 |
+| CSS | Custom (pas de framework) | — |
+| Authentification | Django Auth | intégré |
+
+## Modèle de données
+
+### OLTP — 6 tables (app `core`)
 
 ```
-Base OLTP → ETL → Data Warehouse → API → Dashboard
+Client ──< Appointment >── Employee
+               │
+             Service
+               │
+            Invoice ──< Payment
 ```
 
-**Fréquence de rafraîchissement**:
-- Dimensions: Quotidien
-- Faits: Quotidien
-- Vues matérialisées: Quotidien
+| Table | Rôle |
+|-------|------|
+| `Client` | Entreprises clientes (secteur, ville, contact) |
+| `Employee` | Consultants (rôle, taux horaire, ancienneté) |
+| `Service` | Prestations (catégorie, prix, durée) |
+| `Appointment` | Missions (client + consultant + service + date) |
+| `Invoice` | Factures (montant HT/TTC, statut, échéance) |
+| `Payment` | Paiements reçus (montant, mode, date) |
+
+### Data Warehouse — schéma en étoile (app `dw`)
+
+```
+DimDate ────┐
+DimClient ──┤
+DimEmployee ┼── FactSales
+DimService ─┘
+```
+
+| Dimension | Champs clés |
+|-----------|-------------|
+| `DimDate` | full_date, year, quarter, month, day_of_week |
+| `DimClient` | company_name, sector, city |
+| `DimEmployee` | full_name, role, seniority_years |
+| `DimService` | name, category, base_price |
+
+| Fait | Mesures |
+|------|---------|
+| `FactSales` | duration_hours, total_ht, total_ttc, is_paid |
+
+**Indexes composites** sur FactSales : `(date, client)`, `(date, employee)`, `(date, service)`, `(is_paid)`.
+
+## Pipeline ETL
+
+Commande Django : `python manage.py run_etl`
+
+```
+1. Charger DimDate     (2 ans passés + 3 mois futur)
+2. Charger DimClient   (depuis core.Client)
+3. Charger DimEmployee (depuis core.Employee, calcul ancienneté)
+4. Charger DimService  (depuis core.Service)
+5. Charger FactSales   (Appointment réalisé + Invoice jointe)
+```
+
+- Utilise `bulk_create` pour la performance
+- `select_related` pour éviter les N+1
+- Idempotent (ignore les doublons via `source_appointment_id`)
+- Enregistre l'horodatage dans `.etl_last_run`
+
+## Dashboard — 4 pages
+
+### 1. Tableau de bord (vue d'ensemble)
+- 6 cartes KPI avec variation N-1 (CA, missions, panier moyen, clients actifs, taux d'occupation, créances)
+- Graphique ligne : évolution du CA mensuel (avec tendance)
+- Graphique barres horizontales : top 5 services par CA
+- Tableau triable : performance des consultants
+
+### 2. Analyse des revenus
+- KPIs : CA total, missions, heures, variation N-1
+- Filtre par catégorie de service
+- Graphique barres : CA par mois
+- Doughnut : répartition par catégorie
+- Tableaux : top services, détail par client
+
+### 3. Performance consultants
+- KPIs : nombre, taux d'occupation moyen, CA/heure
+- Graphique barres : CA par consultant
+- Tableau : détail individuel (missions, heures, jauges)
+
+### 4. Analyse clients
+- KPIs : clients total, actifs, CA
+- Doughnut : répartition par secteur
+- Classement clients (% du CA, barres de progression)
+- Fréquence des missions
+- Alerte clients inactifs (> 3 mois)
+
+## Séparation des responsabilités
+
+```
+dashboard/services.py   → Logique métier, calcul des KPIs (requêtes ORM)
+dashboard/views.py      → Orchestration, contexte template, sérialisation JSON
+dashboard/urls.py       → Routing (5 routes)
+templates/              → Présentation HTML
+static/js/charts.js     → Rendu graphique (Chart.js)
+static/css/style.css    → Styles visuels
+```
 
 ## Sécurité
 
-### 1. Authentification
-- Base de données: Utilisateurs dédiés par application
-- Dashboard: JWT tokens (optionnel)
+- Authentification obligatoire sur toutes les vues (`@login_required`)
+- Protection CSRF (middleware Django)
+- Variables sensibles dans `.env` (SECRET_KEY, DB credentials)
+- `ALLOWED_HOSTS` configurable par environnement
+- Settings de production conditionnels (`SESSION_COOKIE_SECURE`, `CSRF_COOKIE_SECURE`, `X_FRAME_OPTIONS`)
+- ORM Django exclusivement (pas de SQL brut)
 
-### 2. Autorisation
-- Base OLTP: Rôles PostgreSQL (read/write)
-- Data Warehouse: Lecture seule pour le dashboard
-- ETL: Droits d'écriture sur le DW
+## Routage base de données
 
-### 3. Réseau
-- Connexions chiffrées (SSL/TLS)
-- Isolation des environnements
+`DWRouter` dans `config/db_router.py` :
+- App `dw` → base `dw` (lecture/écriture)
+- Toutes les autres apps → base `default`
+- Pas de relations cross-database
 
 ## Performance
 
-### 1. Base de données
-- Indexation stratégique
-- Partitionnement des tables de faits (par date)
-- Vues matérialisées pour les agrégations
-
-### 2. ETL
-- Traitement par lots (batch processing)
-- Parallélisation des transformations
-- Gestion des erreurs et reprise
-
-### 3. Dashboard
-- Mise en cache côté serveur
-- Pagination des tableaux
-- Chargement asynchrone des données
-
-## Scalabilité
-
-### 1. Verticale
-- Augmentation des ressources serveur
-- Optimisation des requêtes
-
-### 2. Horizontale (future)
-- Réplication de la base de données
-- Clusterisation du Data Warehouse
-- Microservices pour l'ETL
-
-## Monitoring
-
-### 1. Base de données
-- Logs PostgreSQL
-- Métriques de performance
-- Alertes sur les seuils critiques
-
-### 2. ETL
-- Logs d'exécution détaillés
-- Métriques de durée et volume
-- Alertes en cas d'échec
-
-### 3. Dashboard
-- Monitoring des performances
-- Logs des erreurs utilisateur
-- Analytics d'utilisation
+- Indexes composites sur `FactSales` pour les jointures fréquentes
+- `_base_qs()` factorise les filtres de dates
+- Agrégats combinés (2 requêtes au lieu de 6 sur le dashboard)
+- Requête clients inactifs optimisée (1 requête annotée au lieu de N)
+- WhiteNoise pour le service des fichiers statiques
 
 ## Déploiement
 
-### 1. Environnement de développement
-- PostgreSQL local avec Docker
-- Serveur de développement React
-- Scripts de test automatisés
+```bash
+# Production
+DEBUG=False
+SECRET_KEY=<clé-sécurisée-50-chars>
+ALLOWED_HOSTS=mondomaine.ch
+DATABASE_URL=postgres://user:pass@host/dbname
+DW_DATABASE_URL=postgres://user:pass@host/dw_dbname
+```
 
-### 2. Environnement de production
-- Serveur dédié ou cloud
-- Sauvegardes automatisées
-- Plan de reprise d'activité
-
-## Maintenance
-
-### 1. Base de données
-- Maintenance régulière (VACUUM, ANALYZE)
-- Sauvegardes quotidiennes
-- Monitoring de l'espace disque
-
-### 2. ETL
-- Mise à jour des règles métier
-- Optimisation des performances
-- Gestion des évolutions de schéma
-
-### 3. Dashboard
-- Mises à jour des librairies
-- Évolution des fonctionnalités
-- Gestion des retours utilisateurs
-
-## Évolutions Futures
-
-### 1. Court terme (3-6 mois)
-- API REST pour le dashboard
-- Notifications en temps réel
-- Export PDF des rapports
-
-### 2. Moyen terme (6-12 mois)
-- Machine Learning pour les prévisions
-- Mobile application
-- Intégration avec d'autres sources de données
-
-### 3. Long terme (1+ an)
-- Architecture microservices
-- Data Lake pour les données brutes
-- Advanced Analytics et AI
-
-## Technologies Alternatives
-
-### Base de données
-- OLTP: MySQL, SQL Server
-- DW: Snowflake, BigQuery, Redshift
-
-### ETL
-- Apache Airflow (orchestration)
-- Talend (ETL visuel)
-- Apache Spark (big data)
-
-### Dashboard
-- Tableau, Power BI (BI tools)
-- Vue.js, Angular (frameworks)
-- D3.js (graphiques personnalisés)
-
-## Conclusion
-
-Cette architecture technique offre un équilibre optimal entre simplicité, performance et évolutivité pour une PME comme EcoDistribution. L'utilisation de technologies open-source réduit les coûts tout en garantissant la pérennité de la solution.
+Serveur recommandé : Gunicorn + Nginx (ou Railway/Render pour le PaaS).

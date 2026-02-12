@@ -1,0 +1,121 @@
+{% extends "dashboard/base_dashboard.html" %}
+
+{% block title %}Tableau de bord — DecisionBoard{% endblock %}
+{% block page_title %}Tableau de bord{% endblock %}
+
+{% block content %}
+<!-- Cartes KPI (6 cartes avec variations N-1) -->
+<div class="kpi-grid kpi-grid-3">
+    <div class="kpi-card">
+        <div class="kpi-label">Chiffre d'affaires HT</div>
+        <div class="kpi-value" data-format="0" data-raw="{{ total_revenue }}">{{ total_revenue|floatformat:0 }}</div>
+        <div class="kpi-unit">CHF</div>
+        <div class="kpi-trend {% if revenue_variation >= 0 %}trend-up{% else %}trend-down{% endif %}">
+            {% if revenue_variation >= 0 %}&#9650; +{% else %}&#9660; {% endif %}{{ revenue_variation }}%
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-label">Missions réalisées</div>
+        <div class="kpi-value">{{ total_missions }}</div>
+        <div class="kpi-trend {% if missions_variation >= 0 %}trend-up{% else %}trend-down{% endif %}">
+            {% if missions_variation >= 0 %}&#9650; +{% else %}&#9660; {% endif %}{{ missions_variation }}%
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-label">Panier moyen</div>
+        <div class="kpi-value" data-format="0" data-raw="{{ average_basket }}">{{ average_basket|floatformat:0 }}</div>
+        <div class="kpi-unit">CHF / mission</div>
+        <div class="kpi-trend {% if basket_variation >= 0 %}trend-up{% else %}trend-down{% endif %}">
+            {% if basket_variation >= 0 %}&#9650; +{% else %}&#9660; {% endif %}{{ basket_variation }}%
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-label">Clients actifs</div>
+        <div class="kpi-value">{{ active_clients }}</div>
+        <div class="kpi-trend {% if clients_variation >= 0 %}trend-up{% else %}trend-down{% endif %}">
+            {% if clients_variation >= 0 %}&#9650; +{% else %}&#9660; {% endif %}{{ clients_variation }}%
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-label">Taux d'occupation</div>
+        <div class="kpi-value">{{ utilization_rate.average }}%</div>
+        <div class="kpi-subtitle">moyenne consultants</div>
+    </div>
+
+    <div class="kpi-card {% if strategic.receivables.is_alert %}kpi-card-warning{% endif %}">
+        <div class="kpi-label">Créances en cours</div>
+        <div class="kpi-value" data-format="0" data-raw="{{ unpaid.amount }}">{{ unpaid.amount|floatformat:0 }}</div>
+        <div class="kpi-unit">CHF</div>
+        <div class="kpi-subtitle">{{ unpaid.count }} facture{{ unpaid.count|pluralize:"s" }} en attente</div>
+    </div>
+</div>
+
+<!-- Graphiques -->
+<div class="charts-grid">
+    <div class="chart-card">
+        <h3>Évolution du CA mensuel</h3>
+        <canvas id="revenueChart"></canvas>
+    </div>
+    <div class="chart-card">
+        <h3>Top 5 services par CA</h3>
+        <canvas id="servicesChart"></canvas>
+    </div>
+</div>
+
+<!-- Tableau performance avec tri + total -->
+<div class="table-card">
+    <h3>Performance des consultants</h3>
+    {% if employee_performance %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th class="sortable">Consultant</th>
+                <th class="sortable">Rôle</th>
+                <th class="sortable text-right" data-sort-num>CA HT</th>
+                <th class="sortable text-center" data-sort-num>Missions</th>
+                <th class="sortable text-center" data-sort-num>Heures</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in employee_performance %}
+            <tr>
+                <td>{{ row.employee__full_name }}</td>
+                <td><span class="badge badge-{{ row.employee__role }}">{{ row.employee__role }}</span></td>
+                <td class="text-right" data-raw="{{ row.revenue }}">{{ row.revenue|floatformat:0 }} CHF</td>
+                <td class="text-center" data-raw="{{ row.missions }}">{{ row.missions }}</td>
+                <td class="text-center" data-raw="{{ row.hours }}">{{ row.hours }}h</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr class="total-row">
+                <td><strong>Total</strong></td>
+                <td></td>
+                <td class="text-right"><strong data-format="0" data-raw="{{ total_revenue }}">{{ total_revenue|floatformat:0 }} CHF</strong></td>
+                <td class="text-center"><strong>{{ total_missions }}</strong></td>
+                <td class="text-center"><strong>—</strong></td>
+            </tr>
+        </tfoot>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">&#128202;</div>
+        <div class="empty-state-title">Aucune donnée disponible</div>
+        <div class="empty-state-text">Lancez l'ETL pour alimenter le Data Warehouse et voir les performances.</div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block page_scripts %}
+<script>
+    queueChart(function() {
+        initLineChart('revenueChart', {{ monthly_labels|safe }}, {{ monthly_values|safe }}, 'CA HT (CHF)');
+        initHorizontalBarChart('servicesChart', {{ top_service_labels|safe }}, {{ top_service_values|safe }});
+    });
+</script>
+{% endblock %}

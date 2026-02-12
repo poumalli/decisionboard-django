@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block body %}
+<div class="app-layout">
+
+    <!-- Sidebar (navigation latérale) -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h1 class="logo">DecisionBoard</h1>
+            <span class="logo-sub">Cabinet de Consulting</span>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="{% url 'dashboard:home' %}"
+               class="nav-item {% if page == 'dashboard' %}active{% endif %}">
+                <span class="nav-icon">&#9632;</span>
+                Tableau de bord
+            </a>
+            <a href="{% url 'dashboard:revenue' %}"
+               class="nav-item {% if page == 'revenue' %}active{% endif %}">
+                <span class="nav-icon">&#9650;</span>
+                Analyse des revenus
+            </a>
+            <a href="{% url 'dashboard:consultants' %}"
+               class="nav-item {% if page == 'consultants' %}active{% endif %}">
+                <span class="nav-icon">&#9679;</span>
+                Performance consultants
+            </a>
+            <a href="{% url 'dashboard:clients' %}"
+               class="nav-item {% if page == 'clients' %}active{% endif %}">
+                <span class="nav-icon">&#9733;</span>
+                Analyse clients
+            </a>
+            <a href="{% url 'dashboard:settings' %}"
+               class="nav-item {% if page == 'settings' %}active{% endif %}">
+                <span class="nav-icon">&#9881;</span>
+                Paramètres
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <span class="user-name">{{ request.user.get_full_name|default:request.user.username }}</span>
+            </div>
+            <a href="{% url 'logout' %}" class="btn btn-sm btn-outline btn-full">Déconnexion</a>
+        </div>
+    </aside>
+
+    <!-- Contenu principal -->
+    <main class="main-content">
+
+        <!-- Barre supérieure avec filtres -->
+        <div class="topbar">
+            <h2 class="page-title">{% block page_title %}Tableau de bord{% endblock %}</h2>
+            <div class="topbar-actions">
+                <!-- Raccourcis de période -->
+                <div class="period-presets">
+                    <a href="?preset=month" class="btn btn-xs {% if active_preset == 'month' %}btn-primary{% else %}btn-outline{% endif %}">Ce mois</a>
+                    <a href="?preset=quarter" class="btn btn-xs {% if active_preset == 'quarter' %}btn-primary{% else %}btn-outline{% endif %}">Ce trimestre</a>
+                    <a href="?preset=year" class="btn btn-xs {% if active_preset == 'year' %}btn-primary{% else %}btn-outline{% endif %}">12 mois</a>
+                </div>
+                <form method="get" class="filters-form">
+                    <div class="filter-group">
+                        <label for="start">Du</label>
+                        <input type="date" name="start" id="start" value="{{ start_date }}">
+                    </div>
+                    <div class="filter-group">
+                        <label for="end">Au</label>
+                        <input type="date" name="end" id="end" value="{{ end_date }}">
+                    </div>
+                    {% block extra_filters %}{% endblock %}
+                    <button type="submit" class="btn btn-primary btn-sm">Filtrer</button>
+                </form>
+                <a href="{% url 'dashboard:export_csv' %}?start={{ start_date }}&end={{ end_date }}"
+                   class="btn btn-sm btn-outline">Exporter CSV</a>
+            </div>
+        </div>
+
+        <!-- Contenu de la page -->
+        <div class="page-content">
+            {% block content %}{% endblock %}
+        </div>
+
+    </main>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'js/charts.js' %}?v=5"></script>
+{% block page_scripts %}{% endblock %}
+{% endblock %}

@@ -1,0 +1,162 @@
+{% extends "dashboard/base_dashboard.html" %}
+
+{% block title %}Analyse clients — DecisionBoard{% endblock %}
+{% block page_title %}Analyse clients{% endblock %}
+
+{% block content %}
+<!-- KPI résumé -->
+<div class="kpi-grid kpi-grid-3">
+    <div class="kpi-card">
+        <div class="kpi-label">Clients total</div>
+        <div class="kpi-value">{{ total_clients }}</div>
+        <div class="kpi-subtitle">dans le portefeuille</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Clients actifs</div>
+        <div class="kpi-value">{{ active_clients }}</div>
+        <div class="kpi-subtitle">au moins 1 mission sur la période</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">CA total HT</div>
+        <div class="kpi-value" data-format="0" data-raw="{{ total_revenue }}">{{ total_revenue|floatformat:0 }}</div>
+        <div class="kpi-unit">CHF</div>
+    </div>
+</div>
+
+<!-- Graphiques -->
+<div class="charts-grid">
+    <div class="chart-card">
+        <h3>Répartition du CA par secteur</h3>
+        <canvas id="sectorDoughnut"></canvas>
+    </div>
+    <div class="chart-card">
+        <h3>Fréquence des missions par client</h3>
+        {% if frequency %}
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th class="sortable">Client</th>
+                    <th class="sortable text-center" data-sort-num>Missions</th>
+                    <th class="sortable text-center" data-sort-num>Mois actifs</th>
+                    <th>Régularité</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in frequency %}
+                <tr>
+                    <td>{{ row.client__company_name }}</td>
+                    <td class="text-center" data-raw="{{ row.total_missions }}">{{ row.total_missions }}</td>
+                    <td class="text-center" data-raw="{{ row.active_months }}">{{ row.active_months }}</td>
+                    <td>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: {% widthratio row.active_months 12 100 %}%"></div>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">&#128197;</div>
+            <div class="empty-state-title">Aucune fréquence calculée</div>
+            <div class="empty-state-text">Pas de données de mission sur cette période.</div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Classement clients avec % du CA -->
+<div class="table-card">
+    <h3>Classement des clients par CA</h3>
+    {% if ranking %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th class="text-center">#</th>
+                <th class="sortable">Client</th>
+                <th class="sortable">Secteur</th>
+                <th class="sortable">Ville</th>
+                <th class="sortable text-right" data-sort-num>CA HT</th>
+                <th class="text-center">% CA</th>
+                <th class="sortable text-center" data-sort-num>Missions</th>
+                <th class="sortable text-center" data-sort-num>Heures</th>
+                <th class="sortable text-right" data-sort-num>Moy./mission</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in ranking %}
+            <tr>
+                <td class="text-center"><strong>{{ forloop.counter }}</strong></td>
+                <td><strong>{{ row.client__company_name }}</strong></td>
+                <td>{{ row.client__sector }}</td>
+                <td>{{ row.client__city }}</td>
+                <td class="text-right" data-raw="{{ row.revenue }}">{{ row.revenue|floatformat:0 }} CHF</td>
+                <td class="text-center">
+                    <div class="pct-bar-wrapper">
+                        <div class="pct-bar" style="width: {{ row.pct_revenue }}%"></div>
+                        <span class="pct-label">{{ row.pct_revenue }}%</span>
+                    </div>
+                </td>
+                <td class="text-center" data-raw="{{ row.missions }}">{{ row.missions }}</td>
+                <td class="text-center" data-raw="{{ row.hours }}">{{ row.hours }}h</td>
+                <td class="text-right" data-raw="{{ row.avg_mission }}">{{ row.avg_mission|floatformat:0 }} CHF</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr class="total-row">
+                <td></td>
+                <td><strong>Total</strong></td>
+                <td></td>
+                <td></td>
+                <td class="text-right"><strong data-format="0" data-raw="{{ total_revenue }}">{{ total_revenue|floatformat:0 }} CHF</strong></td>
+                <td class="text-center"><strong>100%</strong></td>
+                <td class="text-center"><strong>—</strong></td>
+                <td class="text-center"><strong>—</strong></td>
+                <td></td>
+            </tr>
+        </tfoot>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">&#128188;</div>
+        <div class="empty-state-title">Aucun client trouvé</div>
+        <div class="empty-state-text">Modifiez la période pour afficher le classement.</div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Clients inactifs -->
+{% if inactive %}
+<div class="table-card alert-card">
+    <h3>&#9888;&#65039; Clients inactifs — aucune mission depuis {{ inactivity_months }} mois</h3>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Client</th>
+                <th>Dernière mission</th>
+                <th>Statut</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in inactive %}
+            <tr>
+                <td>{{ row.name }}</td>
+                <td>{{ row.last_mission|default:"Jamais" }}</td>
+                <td><span class="badge badge-danger">Inactif</span></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block page_scripts %}
+<script>
+    queueChart(function() {
+        initDoughnutChart('sectorDoughnut', {{ sector_labels|safe }}, {{ sector_values|safe }});
+    });
+</script>
+{% endblock %}

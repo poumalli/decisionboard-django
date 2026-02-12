@@ -1,0 +1,99 @@
+{% extends "dashboard/base_dashboard.html" %}
+
+{% block title %}Paramètres — DecisionBoard{% endblock %}
+{% block page_title %}Paramètres stratégiques{% endblock %}
+
+{% block content %}
+{% if messages %}
+{% for message in messages %}
+<div class="alert alert-{{ message.tags }}">
+    {{ message }}
+</div>
+{% endfor %}
+{% endif %}
+
+<form method="post" class="settings-form">
+    {% csrf_token %}
+
+    <div class="kpi-grid kpi-grid-2">
+        <!-- Objectif CA mensuel -->
+        <div class="setting-card">
+            <div class="setting-header">
+                <h3>Objectif CA mensuel</h3>
+                <p class="setting-desc">{{ form.monthly_revenue_target.help_text }}</p>
+            </div>
+            <div class="setting-input">
+                {{ form.monthly_revenue_target }}
+                <span class="setting-unit">CHF / mois</span>
+            </div>
+            {% if form.monthly_revenue_target.errors %}
+            <div class="setting-error">{{ form.monthly_revenue_target.errors.0 }}</div>
+            {% endif %}
+        </div>
+
+        <!-- Objectif taux d'occupation -->
+        <div class="setting-card">
+            <div class="setting-header">
+                <h3>Objectif taux d'occupation</h3>
+                <p class="setting-desc">{{ form.occupation_rate_target.help_text }}</p>
+            </div>
+            <div class="setting-input">
+                {{ form.occupation_rate_target }}
+                <span class="setting-unit">%</span>
+            </div>
+            {% if form.occupation_rate_target.errors %}
+            <div class="setting-error">{{ form.occupation_rate_target.errors.0 }}</div>
+            {% endif %}
+        </div>
+
+        <!-- Seuil d'inactivité client -->
+        <div class="setting-card">
+            <div class="setting-header">
+                <h3>Seuil d'inactivité client</h3>
+                <p class="setting-desc">{{ form.inactivity_months_threshold.help_text }}</p>
+            </div>
+            <div class="setting-input">
+                {{ form.inactivity_months_threshold }}
+                <span class="setting-unit">mois</span>
+            </div>
+            {% if form.inactivity_months_threshold.errors %}
+            <div class="setting-error">{{ form.inactivity_months_threshold.errors.0 }}</div>
+            {% endif %}
+        </div>
+
+        <!-- Seuil d'alerte créances -->
+        <div class="setting-card">
+            <div class="setting-header">
+                <h3>Seuil d'alerte créances</h3>
+                <p class="setting-desc">{{ form.receivables_alert_threshold.help_text }}</p>
+            </div>
+            <div class="setting-input">
+                {{ form.receivables_alert_threshold }}
+                <span class="setting-unit">CHF</span>
+            </div>
+            {% if form.receivables_alert_threshold.errors %}
+            <div class="setting-error">{{ form.receivables_alert_threshold.errors.0 }}</div>
+            {% endif %}
+        </div>
+
+        <!-- Objectif panier moyen -->
+        <div class="setting-card">
+            <div class="setting-header">
+                <h3>Objectif panier moyen</h3>
+                <p class="setting-desc">{{ form.average_basket_target.help_text }}</p>
+            </div>
+            <div class="setting-input">
+                {{ form.average_basket_target }}
+                <span class="setting-unit">CHF / mission</span>
+            </div>
+            {% if form.average_basket_target.errors %}
+            <div class="setting-error">{{ form.average_basket_target.errors.0 }}</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="settings-actions">
+        <button type="submit" class="btn btn-primary">Enregistrer les paramètres</button>
+    </div>
+</form>
+{% endblock %}
