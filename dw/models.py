@@ -89,16 +89,26 @@ class FactSales(models.Model):
     """
 
     date = models.ForeignKey(DimDate, on_delete=models.CASCADE, verbose_name="Date")
-    client = models.ForeignKey(DimClient, on_delete=models.CASCADE, verbose_name="Client")
-    employee = models.ForeignKey(DimEmployee, on_delete=models.CASCADE, verbose_name="Consultant")
-    service = models.ForeignKey(DimService, on_delete=models.CASCADE, verbose_name="Service")
+    client = models.ForeignKey(
+        DimClient, on_delete=models.CASCADE, verbose_name="Client"
+    )
+    employee = models.ForeignKey(
+        DimEmployee, on_delete=models.CASCADE, verbose_name="Consultant"
+    )
+    service = models.ForeignKey(
+        DimService, on_delete=models.CASCADE, verbose_name="Service"
+    )
 
     source_appointment_id = models.IntegerField("ID mission source", unique=True)
 
     duration_hours = models.IntegerField("Durée (heures)")
-    unit_price = models.DecimalField("Taux horaire (CHF)", max_digits=8, decimal_places=2)
+    unit_price = models.DecimalField(
+        "Taux horaire (CHF)", max_digits=8, decimal_places=2
+    )
     total_ht = models.DecimalField("Montant HT (CHF)", max_digits=10, decimal_places=2)
-    total_ttc = models.DecimalField("Montant TTC (CHF)", max_digits=10, decimal_places=2)
+    total_ttc = models.DecimalField(
+        "Montant TTC (CHF)", max_digits=10, decimal_places=2
+    )
     is_paid = models.BooleanField("Payée", default=False)
 
     class Meta:

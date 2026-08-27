@@ -1,0 +1,59 @@
+{% extends "core/base_data.html" %}
+
+{% block title %}Missions — DecisionBoard{% endblock %}
+{% block page_title %}Gestion des données — Missions{% endblock %}
+
+{% block data_actions %}
+<a href="{% url 'core:appointment_create' %}" class="btn btn-sm btn-primary">+ Nouvelle mission</a>
+{% endblock %}
+
+{% block data_content %}
+<div class="table-card">
+    <h3>Missions ({{ paginator.count }})</h3>
+    {% if appointments %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th class="sortable">Date</th>
+                <th class="sortable">Client</th>
+                <th class="sortable">Consultant</th>
+                <th class="sortable">Service</th>
+                <th class="sortable text-right" data-sort-num>Durée (h)</th>
+                <th class="text-center">Statut</th>
+                <th class="text-center">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for appointment in appointments %}
+            <tr>
+                <td>{{ appointment.date }}</td>
+                <td>{{ appointment.client }}</td>
+                <td>{{ appointment.employee }}</td>
+                <td>{{ appointment.service }}</td>
+                <td class="text-right">{{ appointment.duration_hours }}h</td>
+                <td class="text-center">
+                    {% if appointment.status == "realise" %}
+                    <span class="badge badge-success">{{ appointment.get_status_display }}</span>
+                    {% elif appointment.status == "annule" %}
+                    <span class="badge badge-danger">{{ appointment.get_status_display }}</span>
+                    {% else %}
+                    <span class="badge badge-warning">{{ appointment.get_status_display }}</span>
+                    {% endif %}
+                </td>
+                <td class="text-center">
+                    <a href="{% url 'core:appointment_update' appointment.pk %}" class="btn btn-xs btn-outline">Modifier</a>
+                    <a href="{% url 'core:appointment_delete' appointment.pk %}" class="btn btn-xs btn-outline">Supprimer</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% include "core/_pagination.html" %}
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-title">Aucune mission</div>
+        <div class="empty-state-text">Ajoutez votre première mission pour commencer.</div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

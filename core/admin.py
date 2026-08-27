@@ -38,7 +38,14 @@ class AppointmentAdmin(admin.ModelAdmin):
 
 @admin.register(Invoice)
 class InvoiceAdmin(admin.ModelAdmin):
-    list_display = ("invoice_number", "appointment", "amount_ht", "amount_ttc", "status", "issued_date")
+    list_display = (
+        "invoice_number",
+        "appointment",
+        "amount_ht",
+        "amount_ttc",
+        "status",
+        "issued_date",
+    )
     list_filter = ("status", "issued_date")
     search_fields = ("invoice_number",)
 

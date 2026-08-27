@@ -1,0 +1,74 @@
+{% extends "core/base_data.html" %}
+
+{% block title %}{{ employee.first_name }} {{ employee.last_name }} — DecisionBoard{% endblock %}
+{% block page_title %}Gestion des données — Consultants{% endblock %}
+
+{% block data_actions %}
+<a href="{% url 'core:employee_update' employee.pk %}" class="btn btn-sm btn-outline">Modifier</a>
+<a href="{% url 'core:employee_list' %}" class="btn btn-sm btn-outline">Retour à la liste</a>
+{% endblock %}
+
+{% block data_content %}
+<div class="table-card">
+    <h3>{{ employee.first_name }} {{ employee.last_name }}</h3>
+    <table class="data-table">
+        <tbody>
+            <tr><td>Email</td><td>{{ employee.email }}</td></tr>
+            <tr><td>Rôle</td><td><span class="badge badge-{{ employee.role }}">{{ employee.get_role_display }}</span></td></tr>
+            <tr><td>Date d'embauche</td><td>{{ employee.hire_date }}</td></tr>
+            <tr><td>Taux horaire</td><td>{{ employee.hourly_rate }} CHF</td></tr>
+            <tr>
+                <td>Statut</td>
+                <td>
+                    {% if employee.is_active %}
+                    <span class="badge badge-success">Actif</span>
+                    {% else %}
+                    <span class="badge badge-danger">Inactif</span>
+                    {% endif %}
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="table-card">
+    <h3>Historique des missions ({{ appointments|length }})</h3>
+    {% if appointments %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th class="sortable">Date</th>
+                <th class="sortable">Client</th>
+                <th class="sortable">Service</th>
+                <th class="sortable text-right" data-sort-num>Durée (h)</th>
+                <th class="text-center">Statut</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for appointment in appointments %}
+            <tr>
+                <td>{{ appointment.date }}</td>
+                <td>{{ appointment.client }}</td>
+                <td>{{ appointment.service }}</td>
+                <td class="text-right">{{ appointment.duration_hours }}h</td>
+                <td class="text-center">
+                    {% if appointment.status == "realise" %}
+                    <span class="badge badge-success">{{ appointment.get_status_display }}</span>
+                    {% elif appointment.status == "annule" %}
+                    <span class="badge badge-danger">{{ appointment.get_status_display }}</span>
+                    {% else %}
+                    <span class="badge badge-warning">{{ appointment.get_status_display }}</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-title">Aucune mission</div>
+        <div class="empty-state-text">Ce consultant n'a pas encore de mission enregistrée.</div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

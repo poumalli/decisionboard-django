@@ -1,0 +1,55 @@
+{% extends "core/base_data.html" %}
+
+{% block title %}Consultants — DecisionBoard{% endblock %}
+{% block page_title %}Gestion des données — Consultants{% endblock %}
+
+{% block data_actions %}
+<a href="{% url 'core:employee_create' %}" class="btn btn-sm btn-primary">+ Nouveau consultant</a>
+{% endblock %}
+
+{% block data_content %}
+<div class="table-card">
+    <h3>Consultants ({{ paginator.count }})</h3>
+    {% if employees %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th class="sortable">Nom</th>
+                <th class="sortable">Email</th>
+                <th class="sortable">Rôle</th>
+                <th class="sortable text-right" data-sort-num>Taux horaire</th>
+                <th class="text-center">Actif</th>
+                <th class="text-center">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for employee in employees %}
+            <tr>
+                <td><a href="{% url 'core:employee_detail' employee.pk %}" class="row-link">{{ employee.first_name }} {{ employee.last_name }}</a></td>
+                <td>{{ employee.email }}</td>
+                <td><span class="badge badge-{{ employee.role }}">{{ employee.get_role_display }}</span></td>
+                <td class="text-right">{{ employee.hourly_rate }} CHF</td>
+                <td class="text-center">
+                    {% if employee.is_active %}
+                    <span class="badge badge-success">Actif</span>
+                    {% else %}
+                    <span class="badge badge-danger">Inactif</span>
+                    {% endif %}
+                </td>
+                <td class="text-center">
+                    <a href="{% url 'core:employee_update' employee.pk %}" class="btn btn-xs btn-outline">Modifier</a>
+                    <a href="{% url 'core:employee_delete' employee.pk %}" class="btn btn-xs btn-outline">Supprimer</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% include "core/_pagination.html" %}
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-title">Aucun consultant</div>
+        <div class="empty-state-text">Ajoutez votre premier consultant pour commencer.</div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

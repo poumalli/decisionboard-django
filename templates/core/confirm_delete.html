@@ -1,0 +1,20 @@
+{% extends "core/base_data.html" %}
+
+{% block title %}Confirmer la suppression — DecisionBoard{% endblock %}
+{% block page_title %}Gestion des données{% endblock %}
+
+{% block data_content %}
+<div class="table-card" style="max-width:480px;">
+    <h3>Confirmer la suppression</h3>
+    <p style="color:var(--text-secondary); font-size:14px; margin-bottom:18px;">
+        Voulez-vous vraiment supprimer <strong>{{ object_label }}</strong> ? Cette action est irréversible.
+    </p>
+    <form method="post">
+        {% csrf_token %}
+        <div style="display:flex; gap:8px;">
+            <button type="submit" class="btn btn-primary">Confirmer la suppression</button>
+            <a href="{{ cancel_url }}" class="btn btn-outline">Annuler</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

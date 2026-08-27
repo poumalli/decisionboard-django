@@ -1,0 +1,13 @@
+[run]
+omit =
+    manage.py
+    config/asgi.py
+    config/wsgi.py
+    */migrations/*
+    venv/*
+    tests/*
+
+[report]
+exclude_lines =
+    pragma: no cover
+    raise NotImplementedError

@@ -1,0 +1,57 @@
+{% extends "core/base_data.html" %}
+
+{% block title %}Factures — DecisionBoard{% endblock %}
+{% block page_title %}Gestion des données — Factures{% endblock %}
+
+{% block data_actions %}
+<a href="{% url 'core:invoice_create' %}" class="btn btn-sm btn-primary">+ Nouvelle facture</a>
+{% endblock %}
+
+{% block data_content %}
+<div class="table-card">
+    <h3>Factures ({{ paginator.count }})</h3>
+    {% if invoices %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th class="sortable">N° facture</th>
+                <th class="sortable">Mission</th>
+                <th class="sortable text-right" data-sort-num>Montant TTC</th>
+                <th class="sortable">Échéance</th>
+                <th class="text-center">Statut</th>
+                <th class="text-center">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for invoice in invoices %}
+            <tr>
+                <td>{{ invoice.invoice_number }}</td>
+                <td>{{ invoice.appointment }}</td>
+                <td class="text-right">{{ invoice.amount_ttc }} CHF</td>
+                <td>{{ invoice.due_date }}</td>
+                <td class="text-center">
+                    {% if invoice.status == "payee" %}
+                    <span class="badge badge-success">{{ invoice.get_status_display }}</span>
+                    {% elif invoice.status == "en_retard" %}
+                    <span class="badge badge-danger">{{ invoice.get_status_display }}</span>
+                    {% else %}
+                    <span class="badge badge-warning">{{ invoice.get_status_display }}</span>
+                    {% endif %}
+                </td>
+                <td class="text-center">
+                    <a href="{% url 'core:invoice_update' invoice.pk %}" class="btn btn-xs btn-outline">Modifier</a>
+                    <a href="{% url 'core:invoice_delete' invoice.pk %}" class="btn btn-xs btn-outline">Supprimer</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% include "core/_pagination.html" %}
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-title">Aucune facture</div>
+        <div class="empty-state-text">Les factures apparaîtront ici une fois créées.</div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

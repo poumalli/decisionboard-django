@@ -46,23 +46,119 @@
         <div class="kpi-subtitle">moyenne consultants</div>
     </div>
 
-    <div class="kpi-card {% if strategic.receivables.is_alert %}kpi-card-warning{% endif %}">
-        <div class="kpi-label">Créances en cours</div>
+    <div class="kpi-card {% if strategic.receivables.is_alert %}kpi-card-danger{% endif %}">
+        <div class="kpi-label">Créances en cours{% if strategic.receivables.is_alert %} ⚠{% endif %}</div>
         <div class="kpi-value" data-format="0" data-raw="{{ unpaid.amount }}">{{ unpaid.amount|floatformat:0 }}</div>
         <div class="kpi-unit">CHF</div>
         <div class="kpi-subtitle">{{ unpaid.count }} facture{{ unpaid.count|pluralize:"s" }} en attente</div>
     </div>
 </div>
 
+<!-- Métriques stratégiques -->
+{% if strategic %}
+<div class="table-card" style="margin-bottom: 0;">
+    <h3>Objectifs stratégiques</h3>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Indicateur</th>
+                <th class="text-right">Réalisé</th>
+                <th class="text-right">Objectif</th>
+                <th>Progression</th>
+                <th class="text-center">Statut</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if strategic.revenue %}
+            <tr>
+                <td>Chiffre d'affaires</td>
+                <td class="text-right" data-raw="{{ total_revenue }}">{{ total_revenue|floatformat:0 }} CHF</td>
+                <td class="text-right">{{ strategic.revenue.period_target|floatformat:0 }} CHF</td>
+                <td style="min-width:160px;">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <div class="progress-bar" style="flex:1;">
+                            <div class="progress-fill progress-fill-{{ strategic.revenue.status }}"
+                                 style="width:{% if strategic.revenue.achievement_pct > 100 %}100{% else %}{{ strategic.revenue.achievement_pct }}{% endif %}%;"></div>
+                        </div>
+                        <span style="font-size:12px;font-weight:600;color:var(--text-secondary);white-space:nowrap;min-width:38px;text-align:right;">{{ strategic.revenue.achievement_pct }}%</span>
+                    </div>
+                </td>
+                <td class="text-center"><span class="badge badge-{{ strategic.revenue.status }}">
+                    {% if strategic.revenue.status == "success" %}Atteint{% elif strategic.revenue.status == "warning" %}En cours{% else %}En retard{% endif %}
+                </span></td>
+            </tr>
+            {% endif %}
+            {% if strategic.occupation %}
+            <tr>
+                <td>Taux d'occupation</td>
+                <td class="text-right">{{ strategic.occupation.actual }}%</td>
+                <td class="text-right">{{ strategic.occupation.target }}%</td>
+                <td>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <div class="progress-bar" style="flex:1;">
+                            <div class="progress-fill progress-fill-{{ strategic.occupation.status }}"
+                                 style="width:{% if strategic.occupation.achievement_pct > 100 %}100{% else %}{{ strategic.occupation.achievement_pct }}{% endif %}%;"></div>
+                        </div>
+                        <span style="font-size:12px;font-weight:600;color:var(--text-secondary);white-space:nowrap;min-width:38px;text-align:right;">{{ strategic.occupation.achievement_pct }}%</span>
+                    </div>
+                </td>
+                <td class="text-center"><span class="badge badge-{{ strategic.occupation.status }}">
+                    {% if strategic.occupation.status == "success" %}Atteint{% elif strategic.occupation.status == "warning" %}En cours{% else %}En retard{% endif %}
+                </span></td>
+            </tr>
+            {% endif %}
+            {% if strategic.basket %}
+            <tr>
+                <td>Panier moyen / mission</td>
+                <td class="text-right" data-raw="{{ average_basket }}">{{ average_basket|floatformat:0 }} CHF</td>
+                <td class="text-right">{{ strategic.basket.target|floatformat:0 }} CHF</td>
+                <td>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <div class="progress-bar" style="flex:1;">
+                            <div class="progress-fill progress-fill-{{ strategic.basket.status }}"
+                                 style="width:{% if strategic.basket.achievement_pct > 100 %}100{% else %}{{ strategic.basket.achievement_pct }}{% endif %}%;"></div>
+                        </div>
+                        <span style="font-size:12px;font-weight:600;color:var(--text-secondary);white-space:nowrap;min-width:38px;text-align:right;">{{ strategic.basket.achievement_pct }}%</span>
+                    </div>
+                </td>
+                <td class="text-center"><span class="badge badge-{{ strategic.basket.status }}">
+                    {% if strategic.basket.status == "success" %}Atteint{% elif strategic.basket.status == "warning" %}En cours{% else %}En retard{% endif %}
+                </span></td>
+            </tr>
+            {% endif %}
+            {% if strategic.receivables %}
+            <tr>
+                <td>Créances en cours</td>
+                <td class="text-right {% if strategic.receivables.is_alert %}text-warning{% endif %}" data-raw="{{ unpaid.amount }}">{{ unpaid.amount|floatformat:0 }} CHF</td>
+                <td class="text-right">seuil {{ strategic.receivables.threshold|floatformat:0 }} CHF</td>
+                <td><span class="text-{% if strategic.receivables.is_alert %}warning{% else %}positive{% endif %}" style="font-size:12px;font-weight:500;">
+                    {% if strategic.receivables.is_alert %}Seuil dépassé{% else %}Sous contrôle{% endif %}
+                </span></td>
+                <td class="text-center">
+                    <span class="badge badge-{{ strategic.receivables.status }}">
+                        {% if strategic.receivables.is_alert %}Alerte{% else %}OK{% endif %}
+                    </span>
+                </td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
 <!-- Graphiques -->
 <div class="charts-grid">
     <div class="chart-card">
         <h3>Évolution du CA mensuel</h3>
-        <canvas id="revenueChart"></canvas>
+        <div class="chart-canvas-wrapper">
+            <canvas id="revenueChart"></canvas>
+        </div>
     </div>
     <div class="chart-card">
         <h3>Top 5 services par CA</h3>
-        <canvas id="servicesChart"></canvas>
+        <div class="chart-canvas-wrapper">
+            <canvas id="servicesChart"></canvas>
+        </div>
     </div>
 </div>
 
@@ -103,7 +199,14 @@
     </table>
     {% else %}
     <div class="empty-state">
-        <div class="empty-state-icon">&#128202;</div>
+        <div class="empty-state-icon">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.4">
+            <rect x="4" y="4" width="14" height="14" rx="2"/>
+            <rect x="22" y="4" width="14" height="14" rx="2"/>
+            <rect x="4" y="22" width="14" height="14" rx="2"/>
+            <rect x="22" y="22" width="14" height="14" rx="2"/>
+        </svg>
+    </div>
         <div class="empty-state-title">Aucune donnée disponible</div>
         <div class="empty-state-text">Lancez l'ETL pour alimenter le Data Warehouse et voir les performances.</div>
     </div>

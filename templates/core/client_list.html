@@ -1,0 +1,49 @@
+{% extends "core/base_data.html" %}
+
+{% block title %}Clients — DecisionBoard{% endblock %}
+{% block page_title %}Gestion des données — Clients{% endblock %}
+
+{% block data_actions %}
+<a href="{% url 'core:client_create' %}" class="btn btn-sm btn-primary">+ Nouveau client</a>
+{% endblock %}
+
+{% block data_content %}
+<div class="table-card">
+    <h3>Clients ({{ paginator.count }})</h3>
+    {% if clients %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th class="sortable">Raison sociale</th>
+                <th class="sortable">Contact</th>
+                <th class="sortable">Email</th>
+                <th class="sortable">Ville</th>
+                <th class="sortable">Secteur</th>
+                <th class="text-center">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for client in clients %}
+            <tr>
+                <td><a href="{% url 'core:client_detail' client.pk %}" class="row-link">{{ client.company_name }}</a></td>
+                <td>{{ client.contact_name }}</td>
+                <td>{{ client.email }}</td>
+                <td>{{ client.city }}</td>
+                <td><span class="badge badge-category">{{ client.get_sector_display }}</span></td>
+                <td class="text-center">
+                    <a href="{% url 'core:client_update' client.pk %}" class="btn btn-xs btn-outline">Modifier</a>
+                    <a href="{% url 'core:client_delete' client.pk %}" class="btn btn-xs btn-outline">Supprimer</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% include "core/_pagination.html" %}
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-title">Aucun client</div>
+        <div class="empty-state-text">Ajoutez votre premier client pour commencer.</div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

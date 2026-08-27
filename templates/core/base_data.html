@@ -1,0 +1,17 @@
+{% extends "dashboard/base_dashboard.html" %}
+
+{% block topbar_actions %}
+<div class="period-presets">
+    <a href="{% url 'core:client_list' %}" class="btn btn-xs {% if section == 'clients' %}btn-primary{% else %}btn-outline{% endif %}">Clients</a>
+    <a href="{% url 'core:employee_list' %}" class="btn btn-xs {% if section == 'employees' %}btn-primary{% else %}btn-outline{% endif %}">Consultants</a>
+    <a href="{% url 'core:service_list' %}" class="btn btn-xs {% if section == 'services' %}btn-primary{% else %}btn-outline{% endif %}">Services</a>
+    <a href="{% url 'core:appointment_list' %}" class="btn btn-xs {% if section == 'appointments' %}btn-primary{% else %}btn-outline{% endif %}">Missions</a>
+    <a href="{% url 'core:invoice_list' %}" class="btn btn-xs {% if section == 'invoices' %}btn-primary{% else %}btn-outline{% endif %}">Factures</a>
+    <a href="{% url 'core:payment_list' %}" class="btn btn-xs {% if section == 'payments' %}btn-primary{% else %}btn-outline{% endif %}">Paiements</a>
+</div>
+{% block data_actions %}{% endblock %}
+{% endblock %}
+
+{% block content %}
+{% block data_content %}{% endblock %}
+{% endblock %}

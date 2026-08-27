@@ -27,7 +27,9 @@
 <div class="charts-grid">
     <div class="chart-card">
         <h3>Répartition du CA par secteur</h3>
-        <canvas id="sectorDoughnut"></canvas>
+        <div class="chart-canvas-wrapper">
+            <canvas id="sectorDoughnut"></canvas>
+        </div>
     </div>
     <div class="chart-card">
         <h3>Fréquence des missions par client</h3>
@@ -58,7 +60,12 @@
         </table>
         {% else %}
         <div class="empty-state">
-            <div class="empty-state-icon">&#128197;</div>
+            <div class="empty-state-icon">
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.4">
+                    <rect x="5" y="8" width="30" height="28" rx="2"/>
+                    <path d="M27 5v6M13 5v6M5 18h30"/>
+                </svg>
+            </div>
             <div class="empty-state-title">Aucune fréquence calculée</div>
             <div class="empty-state-text">Pas de données de mission sur cette période.</div>
         </div>
@@ -89,7 +96,7 @@
             <tr>
                 <td class="text-center"><strong>{{ forloop.counter }}</strong></td>
                 <td><strong>{{ row.client__company_name }}</strong></td>
-                <td>{{ row.client__sector }}</td>
+                <td>{{ row.sector_display }}</td>
                 <td>{{ row.client__city }}</td>
                 <td class="text-right" data-raw="{{ row.revenue }}">{{ row.revenue|floatformat:0 }} CHF</td>
                 <td class="text-center">
@@ -120,7 +127,12 @@
     </table>
     {% else %}
     <div class="empty-state">
-        <div class="empty-state-icon">&#128188;</div>
+        <div class="empty-state-icon">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.4">
+            <rect x="6" y="14" width="28" height="22" rx="2"/>
+            <path d="M14 14v-4a6 6 0 0112 0v4"/>
+        </svg>
+    </div>
         <div class="empty-state-title">Aucun client trouvé</div>
         <div class="empty-state-text">Modifiez la période pour afficher le classement.</div>
     </div>
@@ -130,7 +142,7 @@
 <!-- Clients inactifs -->
 {% if inactive %}
 <div class="table-card alert-card">
-    <h3>&#9888;&#65039; Clients inactifs — aucune mission depuis {{ inactivity_months }} mois</h3>
+    <h3>Clients inactifs — aucune mission depuis {{ inactivity_months }} mois</h3>
     <table class="data-table">
         <thead>
             <tr>

@@ -1,0 +1,47 @@
+{% extends "core/base_data.html" %}
+
+{% block title %}Services — DecisionBoard{% endblock %}
+{% block page_title %}Gestion des données — Services{% endblock %}
+
+{% block data_actions %}
+<a href="{% url 'core:service_create' %}" class="btn btn-sm btn-primary">+ Nouveau service</a>
+{% endblock %}
+
+{% block data_content %}
+<div class="table-card">
+    <h3>Services ({{ paginator.count }})</h3>
+    {% if services %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th class="sortable">Nom</th>
+                <th class="sortable">Catégorie</th>
+                <th class="sortable text-right" data-sort-num>Prix de base</th>
+                <th class="sortable text-right" data-sort-num>Durée (h)</th>
+                <th class="text-center">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for service in services %}
+            <tr>
+                <td>{{ service.name }}</td>
+                <td><span class="badge badge-category">{{ service.get_category_display }}</span></td>
+                <td class="text-right">{{ service.base_price }} CHF</td>
+                <td class="text-right">{{ service.duration_hours }}h</td>
+                <td class="text-center">
+                    <a href="{% url 'core:service_update' service.pk %}" class="btn btn-xs btn-outline">Modifier</a>
+                    <a href="{% url 'core:service_delete' service.pk %}" class="btn btn-xs btn-outline">Supprimer</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% include "core/_pagination.html" %}
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-title">Aucun service</div>
+        <div class="empty-state-text">Ajoutez votre premier service pour commencer.</div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

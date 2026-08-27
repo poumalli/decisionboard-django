@@ -20,27 +20,37 @@ class BusinessSettingsForm(forms.ModelForm):
             "average_basket_target",
         ]
         widgets = {
-            "monthly_revenue_target": forms.NumberInput(attrs={
-                "min": "0",
-                "step": "100",
-            }),
-            "occupation_rate_target": forms.NumberInput(attrs={
-                "min": "0",
-                "max": "100",
-                "step": "1",
-            }),
-            "inactivity_months_threshold": forms.NumberInput(attrs={
-                "min": "1",
-                "max": "24",
-            }),
-            "receivables_alert_threshold": forms.NumberInput(attrs={
-                "min": "0",
-                "step": "100",
-            }),
-            "average_basket_target": forms.NumberInput(attrs={
-                "min": "0",
-                "step": "100",
-            }),
+            "monthly_revenue_target": forms.NumberInput(
+                attrs={
+                    "min": "0",
+                    "step": "100",
+                }
+            ),
+            "occupation_rate_target": forms.NumberInput(
+                attrs={
+                    "min": "0",
+                    "max": "100",
+                    "step": "1",
+                }
+            ),
+            "inactivity_months_threshold": forms.NumberInput(
+                attrs={
+                    "min": "1",
+                    "max": "24",
+                }
+            ),
+            "receivables_alert_threshold": forms.NumberInput(
+                attrs={
+                    "min": "0",
+                    "step": "100",
+                }
+            ),
+            "average_basket_target": forms.NumberInput(
+                attrs={
+                    "min": "0",
+                    "step": "100",
+                }
+            ),
         }
 
     def clean_occupation_rate_target(self):

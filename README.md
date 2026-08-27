@@ -1,7 +1,7 @@
 # DecisionBoard
 
 Plateforme décisionnelle pour un cabinet de consulting.
-Transforme les données opérationnelles (clients, missions, consultants, facturation) en indicateurs de pilotage via un tableau de bord web.
+Transforme les données opérationnelles (clients, missions, consultants, facturation) en indicateurs de pilotage via un tableau de bord web, avec gestion complète des données et pipeline ETL pilotable depuis l'interface.
 
 ## Architecture
 
@@ -16,35 +16,52 @@ Base OLTP (PostgreSQL)  →  ETL (Django ORM)  →  Data Warehouse  →  Dashboa
 | **DW** | Schéma en étoile (4 dims + 1 fait) | PostgreSQL / SQLite |
 | **Dashboard** | Interface web avec KPIs | Django + Chart.js |
 
-## Dashboard (4 pages)
+## Fonctionnalités
 
-### Tableau de bord (vue d'ensemble)
-- 4 cartes KPI : CA, panier moyen, clients actifs, taux d'occupation
-- Graphique : évolution du CA mensuel
-- Graphique : top 5 services par CA
+### Dashboard (5 pages)
+
+**Tableau de bord** (vue d'ensemble)
+- 6 cartes KPI : CA, missions, panier moyen, clients actifs, taux d'occupation, créances en cours
+- Suivi des objectifs stratégiques (progression vs cible, alertes)
+- Graphique : évolution du CA mensuel · Top 5 services par CA
 - Tableau : performance des consultants
 
-### Analyse des revenus
-- CA par mois (graphique barres)
-- CA par catégorie de service (doughnut)
-- Détail par service et par client (tableaux)
+**Analyse des revenus** — CA par mois et par catégorie de service, détail par service et par client, filtre par catégorie
 
-### Performance consultants
-- CA et heures par consultant (graphique barres)
-- Taux d'occupation individuel (jauges visuelles)
-- Tableau détaillé : missions, heures, moyenne
+**Performance consultants** — CA et heures par consultant, taux d'occupation individuel (jauges), tableau détaillé
 
-### Analyse clients
-- Répartition du CA par secteur (doughnut)
-- Classement des clients par CA
-- Fréquence des missions (barres de progression)
-- Clients inactifs (alerte)
+**Analyse clients** — répartition du CA par secteur, classement des clients, fréquence des missions, alerte clients inactifs
+
+**Paramètres stratégiques** — configuration des objectifs (CA mensuel, taux d'occupation, panier moyen) et seuils d'alerte (inactivité client, créances)
+
+Filtres communs à toutes les pages : raccourcis de période (mois/trimestre/année), plage de dates personnalisée, export CSV au choix (performance consultants, revenus mensuels ou classement clients).
+
+### Gestion des données (CRUD)
+
+Interface complète pour créer, modifier et supprimer les 6 entités OLTP — clients, consultants, services, missions, factures, paiements — sans passer par l'admin Django. Fiches détail avec historique des missions pour les clients et les consultants. Réservée au groupe **Administrateur**.
+
+### Pipeline ETL
+
+Déclenchable en un clic depuis la sidebar (bouton "Lancer l'ETL", avec horodatage de la dernière exécution) ou en ligne de commande :
+
+```bash
+python manage.py run_etl
+```
+
+## Contrôle d'accès
+
+Deux groupes Django, créés automatiquement après chaque migration (et via `setup_groups`) :
+
+| Groupe | Accès |
+|--------|-------|
+| **Administrateur** | Dashboard + Gestion des données (CRUD) + ETL |
+| **Consultant** | Dashboard en lecture seule |
 
 ## Installation
 
 ### Prérequis
 
-- Python 3.10+
+- Python 3.11+
 - PostgreSQL 13+ (optionnel, SQLite par défaut)
 
 ### Mise en place
@@ -70,57 +87,74 @@ cp .env.example .env
 python manage.py migrate
 python manage.py migrate --database=dw
 
-# 6. Créer un utilisateur admin
+# 6. Créer les groupes d'accès (Administrateur / Consultant)
+python manage.py setup_groups
+
+# 7. Créer un utilisateur admin et l'ajouter au groupe Administrateur
 python manage.py createsuperuser
 
-# 7. Charger les données de démo
+# 8. Charger les données de démo
 python manage.py seed_data
 
-# 8. Exécuter le pipeline ETL
+# 9. Exécuter le pipeline ETL
 python manage.py run_etl
 
-# 9. Lancer le serveur
+# 10. Lancer le serveur
 python manage.py runserver
 ```
 
 Accéder au dashboard : http://localhost:8000
 
+En production, définir `DJANGO_ENV=production` (voir `config/settings_prod.py` pour les variables requises : `SECRET_KEY`, `DATABASE_URL`, `DW_DATABASE_URL`, `ALLOWED_HOSTS`).
+
 ## Structure du projet
 
 ```
 decisionboard-django/
-├── config/                  # Configuration Django
-│   ├── settings.py          # Paramètres (DB, sécurité, i18n)
-│   ├── urls.py              # Routes principales
-│   └── db_router.py         # Routeur OLTP / DW
-├── core/                    # Application OLTP
-│   ├── models.py            # 6 modèles (Client, Employee, Service...)
-│   ├── admin.py             # Interface d'administration
+├── config/                       # Configuration Django
+│   ├── settings.py               # Dispatcher (DJANGO_ENV → dev/prod)
+│   ├── settings_base.py          # Réglages communs
+│   ├── settings_dev.py           # Développement (DEBUG=True)
+│   ├── settings_prod.py          # Production (sécurité renforcée)
+│   ├── urls.py                   # Routes principales
+│   └── db_router.py              # Routeur OLTP / DW
+├── core/                         # Application OLTP
+│   ├── models.py                 # 6 modèles (Client, Employee, Service...)
+│   ├── forms.py                  # ModelForms du CRUD
+│   ├── views.py                  # CRUD (list/create/update/delete/detail)
+│   ├── urls.py                   # Routes /data/...
+│   ├── permissions.py            # Décorateurs admin_required / consultant_required
+│   ├── context_processors.py     # user_is_admin, etl_last_run (globaux)
+│   ├── admin.py                  # Interface d'administration Django
 │   └── management/commands/
-│       └── seed_data.py     # Données de démonstration
-├── dw/                      # Data Warehouse
-│   └── models.py            # 4 dimensions + 1 table de faits
-├── etl/                     # Pipeline ETL
+│       ├── seed_data.py          # Données de démonstration
+│       └── setup_groups.py       # Création des groupes d'accès
+├── dw/                            # Data Warehouse
+│   └── models.py                 # 4 dimensions + 1 table de faits
+├── etl/                           # Pipeline ETL
+│   ├── views.py                  # Déclenchement depuis l'UI
+│   ├── urls.py
 │   └── management/commands/
-│       └── run_etl.py       # Commande ETL (OLTP → DW)
-├── dashboard/               # Application Dashboard
-│   ├── views.py             # Vues (4 pages + export CSV)
-│   ├── services.py          # Calcul des KPIs
-│   └── urls.py              # Routes du dashboard
-├── templates/               # Templates HTML
-│   ├── base.html            # Layout commun
-│   ├── login.html           # Page de connexion
-│   └── dashboard/
-│       ├── base_dashboard.html  # Layout avec sidebar
-│       ├── home.html            # Tableau de bord
-│       ├── revenue.html         # Analyse des revenus
-│       ├── consultants.html     # Performance consultants
-│       └── clients.html         # Analyse clients
+│       └── run_etl.py            # Commande ETL (OLTP → DW)
+├── dashboard/                     # Application Dashboard
+│   ├── views.py                  # 5 pages + export CSV
+│   ├── forms.py                  # BusinessSettingsForm
+│   ├── services/                 # Logique métier (KPIs)
+│   │   ├── kpi.py
+│   │   └── business_metrics.py
+│   └── urls.py
+├── templates/
+│   ├── base.html
+│   ├── login.html
+│   ├── errors/                   # 404 / 500 personnalisées
+│   ├── dashboard/                 # 5 pages du dashboard
+│   └── core/                      # Gestion des données (11 templates)
 ├── static/
-│   ├── css/style.css        # Styles
-│   └── js/charts.js         # Graphiques Chart.js
-├── .env.example             # Variables d'environnement (template)
-├── requirements.txt         # Dépendances Python
+│   ├── css/style.css
+│   └── js/charts.js
+├── tests/                         # Suite pytest (miroir de la structure ci-dessus)
+├── .env.example
+├── requirements.txt
 └── manage.py
 ```
 
@@ -147,10 +181,22 @@ dim_service─┘
 
 ## Sécurité
 
-- Authentification obligatoire (`@login_required`)
-- Protection CSRF (Django)
-- Variables sensibles dans `.env`
+- Authentification obligatoire, contrôle d'accès par groupe (`admin_required` / `consultant_required`)
+- Protection CSRF (Django), redirection `next` validée (anti-open-redirect)
+- Variables sensibles dans `.env` (jamais commité)
 - ORM Django uniquement (pas de SQL brut)
+- Settings production : cookies sécurisés, `SECRET_KEY` par défaut refusée au démarrage, fichiers statiques avec manifest
+
+## Tests
+
+Développement en TDD strict (Red → Green → Refactor). 170 tests, **99% de couverture**.
+
+```bash
+python -m pytest                                      # tous les tests
+python -m pytest --cov=. --cov-report=term-missing    # avec couverture
+python -m flake8 .                                     # linter
+python -m mypy .                                        # typage
+```
 
 ## Technologies
 
@@ -159,6 +205,8 @@ dim_service─┘
 - **Graphiques** : Chart.js 4
 - **CSS** : CSS custom (pas de framework)
 - **Serveur statique** : WhiteNoise
+- **Tests** : pytest, pytest-django, pytest-cov
+- **Qualité** : flake8, black, mypy (django-stubs)
 
 ## Licence
 

@@ -1,0 +1,49 @@
+{% extends "core/base_data.html" %}
+
+{% block title %}Paiements — DecisionBoard{% endblock %}
+{% block page_title %}Gestion des données — Paiements{% endblock %}
+
+{% block data_actions %}
+<a href="{% url 'core:payment_create' %}" class="btn btn-sm btn-primary">+ Nouveau paiement</a>
+{% endblock %}
+
+{% block data_content %}
+<div class="table-card">
+    <h3>Paiements ({{ paginator.count }})</h3>
+    {% if payments %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th class="sortable">Facture</th>
+                <th class="sortable">Client</th>
+                <th class="sortable text-right" data-sort-num>Montant</th>
+                <th class="sortable">Date</th>
+                <th class="sortable">Mode</th>
+                <th class="text-center">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for payment in payments %}
+            <tr>
+                <td>{{ payment.invoice.invoice_number }}</td>
+                <td>{{ payment.invoice.appointment.client }}</td>
+                <td class="text-right">{{ payment.amount }} CHF</td>
+                <td>{{ payment.payment_date }}</td>
+                <td><span class="badge badge-category">{{ payment.get_method_display }}</span></td>
+                <td class="text-center">
+                    <a href="{% url 'core:payment_update' payment.pk %}" class="btn btn-xs btn-outline">Modifier</a>
+                    <a href="{% url 'core:payment_delete' payment.pk %}" class="btn btn-xs btn-outline">Supprimer</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% include "core/_pagination.html" %}
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-title">Aucun paiement</div>
+        <div class="empty-state-text">Les paiements apparaîtront ici une fois enregistrés.</div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

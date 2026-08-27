@@ -5,14 +5,14 @@ Toutes les vues nécessitent une authentification (@login_required).
 
 import csv
 import json
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from decimal import Decimal
 
-from django.conf import settings as django_settings
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
+
+from core.permissions import consultant_required
 
 from . import services
 from .forms import BusinessSettingsForm
@@ -55,7 +55,7 @@ def _parse_date_filters(request):
         quarter_start = ((today.month - 1) // 3) * 3 + 1
         return today.replace(month=quarter_start, day=1), today
     if preset == "year":
-        return today - timedelta(days=365), today
+        return today.replace(month=1, day=1), today
 
     start_str = request.GET.get("start")
     end_str = request.GET.get("end")
@@ -77,7 +77,10 @@ def _get_active_preset(request):
 
 
 def _base_context(request, page, start_date, end_date):
-    """Contexte commun à toutes les pages du dashboard."""
+    """Contexte commun à toutes les pages du dashboard.
+
+    user_is_admin est injecté globalement par core.context_processors.user_role.
+    """
     return {
         "page": page,
         "start_date": start_date.isoformat(),
@@ -93,27 +96,22 @@ def _chart_data(records, label_key, value_key="revenue"):
     return _to_json(labels), _to_json(values)
 
 
-def _load_settings():
-    """Charge la configuration stratégique (singleton)."""
-    return BusinessSettings.load()
-
-
 # =============================================
 # PAGE 1 : TABLEAU DE BORD
 # =============================================
 
 
-@login_required
+@consultant_required
 def dashboard(request):
     """Vue principale : KPIs globaux, graphiques, tableau résumé."""
     start_date, end_date = _parse_date_filters(request)
     data = services.get_dashboard_summary(start_date, end_date)
-    biz_settings = _load_settings()
+    biz_settings = BusinessSettings.load()
     strategic = compute_strategic_metrics(data, biz_settings)
 
-    monthly_labels = _to_json([
-        r["month"].strftime("%b %Y") for r in data["monthly_revenue"]
-    ])
+    monthly_labels = _to_json(
+        [r["month"].strftime("%b %Y") for r in data["monthly_revenue"]]
+    )
     monthly_values = _to_json([float(r["revenue"]) for r in data["monthly_revenue"]])
     service_labels, service_values = _chart_data(data["top_services"], "service__name")
 
@@ -144,7 +142,7 @@ def dashboard(request):
 # =============================================
 
 
-@login_required
+@consultant_required
 def revenue(request):
     """Vue détaillée des revenus : par mois, catégorie, client."""
     start_date, end_date = _parse_date_filters(request)
@@ -154,11 +152,13 @@ def revenue(request):
         start_date, end_date, category=category_filter or None
     )
 
-    monthly_labels = _to_json([
-        r["month"].strftime("%b %Y") for r in data["monthly_revenue"]
-    ])
+    monthly_labels = _to_json(
+        [r["month"].strftime("%b %Y") for r in data["monthly_revenue"]]
+    )
     monthly_values = _to_json([float(r["revenue"]) for r in data["monthly_revenue"]])
-    category_labels, category_values = _chart_data(data["by_category"], "service__category")
+    category_labels, category_values = _chart_data(
+        data["by_category"], "category_display"
+    )
 
     context = {
         **_base_context(request, "revenue", start_date, end_date),
@@ -183,7 +183,7 @@ def revenue(request):
 # =============================================
 
 
-@login_required
+@consultant_required
 def consultants(request):
     """Vue détaillée des consultants : CA, heures, taux d'occupation."""
     start_date, end_date = _parse_date_filters(request)
@@ -215,11 +215,11 @@ def consultants(request):
 # =============================================
 
 
-@login_required
+@consultant_required
 def clients(request):
     """Vue détaillée des clients : secteurs, ranking, fréquence, inactifs."""
     start_date, end_date = _parse_date_filters(request)
-    biz_settings = _load_settings()
+    biz_settings = BusinessSettings.load()
 
     data = services.get_clients_summary(
         start_date,
@@ -227,7 +227,7 @@ def clients(request):
         inactivity_months=biz_settings.inactivity_months_threshold,
     )
 
-    sector_labels, sector_values = _chart_data(data["by_sector"], "client__sector")
+    sector_labels, sector_values = _chart_data(data["by_sector"], "sector_display")
 
     context = {
         **_base_context(request, "clients", start_date, end_date),
@@ -249,10 +249,10 @@ def clients(request):
 # =============================================
 
 
-@login_required
+@consultant_required
 def settings_view(request):
     """Configuration des objectifs stratégiques du cabinet."""
-    biz_settings = _load_settings()
+    biz_settings = BusinessSettings.load()
 
     if request.method == "POST":
         form = BusinessSettingsForm(request.POST, instance=biz_settings)
@@ -275,26 +275,64 @@ def settings_view(request):
 # =============================================
 
 
-@login_required
+def _write_consultants_csv(writer, start_date, end_date):
+    writer.writerow(["Consultant", "Rôle", "CA HT (CHF)", "Missions", "Heures"])
+    for row in services.get_employee_performance(start_date, end_date):
+        writer.writerow(
+            [
+                row["employee__full_name"],
+                row["employee__role"],
+                f'{row["revenue"]:.2f}',
+                row["missions"],
+                row["hours"],
+            ]
+        )
+
+
+def _write_revenue_csv(writer, start_date, end_date):
+    writer.writerow(["Mois", "CA HT (CHF)"])
+    for row in services.get_revenue_summary(start_date, end_date)["monthly_revenue"]:
+        writer.writerow([row["month"].strftime("%m/%Y"), f'{row["revenue"]:.2f}'])
+
+
+def _write_clients_csv(writer, start_date, end_date):
+    writer.writerow(
+        ["Client", "Secteur", "Ville", "CA HT (CHF)", "Missions", "% du CA"]
+    )
+    for row in services.get_clients_summary(start_date, end_date)["ranking"]:
+        writer.writerow(
+            [
+                row["client__company_name"],
+                row["sector_display"],
+                row["client__city"],
+                f'{row["revenue"]:.2f}',
+                row["missions"],
+                row["pct_revenue"],
+            ]
+        )
+
+
+_CSV_EXPORTERS = {
+    "consultants": _write_consultants_csv,
+    "revenue": _write_revenue_csv,
+    "clients": _write_clients_csv,
+}
+
+
+@consultant_required
 def export_csv(request):
-    """Exporte les performances consultants en CSV."""
+    """Exporte un jeu de données (consultants, revenus ou clients) en CSV."""
     start_date, end_date = _parse_date_filters(request)
+    dataset = request.GET.get("dataset", "consultants")
+    write_rows = _CSV_EXPORTERS.get(dataset, _write_consultants_csv)
+    dataset_key = dataset if dataset in _CSV_EXPORTERS else "consultants"
 
     response = HttpResponse(content_type="text/csv")
     response["Content-Disposition"] = (
-        f'attachment; filename="decisionboard_export_{date.today()}.csv"'
+        f'attachment; filename="decisionboard_{dataset_key}_{date.today()}.csv"'
     )
 
     writer = csv.writer(response, delimiter=";")
-    writer.writerow(["Consultant", "Rôle", "CA HT (CHF)", "Missions", "Heures"])
-
-    for row in services.get_employee_performance(start_date, end_date):
-        writer.writerow([
-            row["employee__full_name"],
-            row["employee__role"],
-            f'{row["revenue"]:.2f}',
-            row["missions"],
-            row["hours"],
-        ])
+    write_rows(writer, start_date, end_date)
 
     return response

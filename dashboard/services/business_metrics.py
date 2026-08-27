@@ -52,7 +52,9 @@ def compute_strategic_metrics(dashboard_data, settings):
 
     # --- Taux d'occupation vs objectif ---
     utilization = dashboard_data.get("utilization_rate", {})
-    avg_rate = float(utilization.get("average", 0)) if isinstance(utilization, dict) else 0
+    avg_rate = (
+        float(utilization.get("average", 0)) if isinstance(utilization, dict) else 0
+    )
     target_rate = settings.occupation_rate_target
 
     if target_rate > 0:

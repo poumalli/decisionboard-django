@@ -54,7 +54,9 @@ class Employee(models.Model):
     email = models.EmailField("Email", unique=True)
     role = models.CharField("Rôle", max_length=20, choices=ROLE_CHOICES)
     hire_date = models.DateField("Date d'embauche")
-    hourly_rate = models.DecimalField("Taux horaire (CHF)", max_digits=8, decimal_places=2)
+    hourly_rate = models.DecimalField(
+        "Taux horaire (CHF)", max_digits=8, decimal_places=2
+    )
     is_active = models.BooleanField("Actif", default=True)
 
     class Meta:
@@ -81,7 +83,9 @@ class Service(models.Model):
 
     name = models.CharField("Nom du service", max_length=200)
     category = models.CharField("Catégorie", max_length=50, choices=CATEGORY_CHOICES)
-    base_price = models.DecimalField("Prix de base HT (CHF)", max_digits=10, decimal_places=2)
+    base_price = models.DecimalField(
+        "Prix de base HT (CHF)", max_digits=10, decimal_places=2
+    )
     duration_hours = models.IntegerField("Durée estimée (heures)")
     description = models.TextField("Description", blank=True)
 
@@ -104,9 +108,7 @@ class Appointment(models.Model):
         ("annule", "Annulé"),
     ]
 
-    client = models.ForeignKey(
-        Client, on_delete=models.CASCADE, verbose_name="Client"
-    )
+    client = models.ForeignKey(Client, on_delete=models.CASCADE, verbose_name="Client")
     employee = models.ForeignKey(
         Employee, on_delete=models.CASCADE, verbose_name="Consultant"
     )
@@ -144,8 +146,12 @@ class Invoice(models.Model):
     )
     invoice_number = models.CharField("N° facture", max_length=50, unique=True)
     amount_ht = models.DecimalField("Montant HT (CHF)", max_digits=10, decimal_places=2)
-    tax_rate = models.DecimalField("Taux TVA (%)", max_digits=5, decimal_places=2, default=20.00)
-    amount_ttc = models.DecimalField("Montant TTC (CHF)", max_digits=10, decimal_places=2)
+    tax_rate = models.DecimalField(
+        "Taux TVA (%)", max_digits=5, decimal_places=2, default=20.00
+    )
+    amount_ttc = models.DecimalField(
+        "Montant TTC (CHF)", max_digits=10, decimal_places=2
+    )
     issued_date = models.DateField("Date d'émission")
     due_date = models.DateField("Date d'échéance")
     status = models.CharField(
@@ -176,9 +182,7 @@ class Payment(models.Model):
     )
     amount = models.DecimalField("Montant (CHF)", max_digits=10, decimal_places=2)
     payment_date = models.DateField("Date de paiement")
-    method = models.CharField(
-        "Mode de paiement", max_length=20, choices=METHOD_CHOICES
-    )
+    method = models.CharField("Mode de paiement", max_length=20, choices=METHOD_CHOICES)
 
     class Meta:
         db_table = "payments"

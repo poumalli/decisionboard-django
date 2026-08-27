@@ -3,19 +3,13 @@
 {% block title %}Paramètres — DecisionBoard{% endblock %}
 {% block page_title %}Paramètres stratégiques{% endblock %}
 
-{% block content %}
-{% if messages %}
-{% for message in messages %}
-<div class="alert alert-{{ message.tags }}">
-    {{ message }}
-</div>
-{% endfor %}
-{% endif %}
+{% block topbar_actions %}{% endblock %}
 
+{% block content %}
 <form method="post" class="settings-form">
     {% csrf_token %}
 
-    <div class="kpi-grid kpi-grid-2">
+    <div class="settings-grid">
         <!-- Objectif CA mensuel -->
         <div class="setting-card">
             <div class="setting-header">

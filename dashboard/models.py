@@ -70,5 +70,7 @@ class BusinessSettings(models.Model):
         super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
-        """Empêche la suppression de la configuration."""
-        pass
+        """Empêche la suppression de la configuration singleton."""
+        raise PermissionError(
+            "La configuration stratégique singleton ne peut pas être supprimée."
+        )

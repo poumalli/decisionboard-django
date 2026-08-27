@@ -18,27 +18,67 @@
         <nav class="sidebar-nav">
             <a href="{% url 'dashboard:home' %}"
                class="nav-item {% if page == 'dashboard' %}active{% endif %}">
-                <span class="nav-icon">&#9632;</span>
+                <span class="nav-icon">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1.25"/>
+                        <rect x="9" y="1.5" width="5.5" height="5.5" rx="1.25"/>
+                        <rect x="1.5" y="9" width="5.5" height="5.5" rx="1.25"/>
+                        <rect x="9" y="9" width="5.5" height="5.5" rx="1.25"/>
+                    </svg>
+                </span>
                 Tableau de bord
             </a>
             <a href="{% url 'dashboard:revenue' %}"
                class="nav-item {% if page == 'revenue' %}active{% endif %}">
-                <span class="nav-icon">&#9650;</span>
+                <span class="nav-icon">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="1.5,12 5.5,7 8.5,9.5 14.5,3"/>
+                        <polyline points="11,3 14.5,3 14.5,6.5"/>
+                    </svg>
+                </span>
                 Analyse des revenus
             </a>
             <a href="{% url 'dashboard:consultants' %}"
                class="nav-item {% if page == 'consultants' %}active{% endif %}">
-                <span class="nav-icon">&#9679;</span>
+                <span class="nav-icon">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="8" cy="5" r="2.75"/>
+                        <path d="M2 14.5c0-3.038 2.686-5.5 6-5.5s6 2.462 6 5.5"/>
+                    </svg>
+                </span>
                 Performance consultants
             </a>
             <a href="{% url 'dashboard:clients' %}"
                class="nav-item {% if page == 'clients' %}active{% endif %}">
-                <span class="nav-icon">&#9733;</span>
+                <span class="nav-icon">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="6" width="12" height="8.5" rx="1.25"/>
+                        <path d="M5.5 6V4.5a2.5 2.5 0 015 0V6"/>
+                    </svg>
+                </span>
                 Analyse clients
             </a>
+            {% if user_is_admin %}
+            <a href="{% url 'core:client_list' %}"
+               class="nav-item {% if page == 'data' %}active{% endif %}">
+                <span class="nav-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 6m-8 0a8 3 0 1 0 16 0a8 3 0 1 0 -16 0"/>
+                        <path d="M4 6v6a8 3 0 0 0 16 0v-6"/>
+                        <path d="M4 12v6a8 3 0 0 0 16 0v-6"/>
+                    </svg>
+                </span>
+                Gestion des données
+            </a>
+            {% endif %}
             <a href="{% url 'dashboard:settings' %}"
                class="nav-item {% if page == 'settings' %}active{% endif %}">
-                <span class="nav-icon">&#9881;</span>
+                <span class="nav-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                </span>
                 Paramètres
             </a>
         </nav>
@@ -47,6 +87,16 @@
             <div class="user-info">
                 <span class="user-name">{{ request.user.get_full_name|default:request.user.username }}</span>
             </div>
+            {% if user_is_admin %}
+            <div class="etl-info">
+                <small>ETL : {{ etl_last_run|default:"jamais exécuté" }}</small>
+            </div>
+            <form method="post" action="{% url 'etl:run_etl' %}">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.path }}">
+                <button type="submit" class="btn btn-sm btn-outline btn-full">Lancer l'ETL</button>
+            </form>
+            {% endif %}
             <a href="{% url 'logout' %}" class="btn btn-sm btn-outline btn-full">Déconnexion</a>
         </div>
     </aside>
@@ -58,11 +108,12 @@
         <div class="topbar">
             <h2 class="page-title">{% block page_title %}Tableau de bord{% endblock %}</h2>
             <div class="topbar-actions">
+                {% block topbar_actions %}
                 <!-- Raccourcis de période -->
                 <div class="period-presets">
                     <a href="?preset=month" class="btn btn-xs {% if active_preset == 'month' %}btn-primary{% else %}btn-outline{% endif %}">Ce mois</a>
                     <a href="?preset=quarter" class="btn btn-xs {% if active_preset == 'quarter' %}btn-primary{% else %}btn-outline{% endif %}">Ce trimestre</a>
-                    <a href="?preset=year" class="btn btn-xs {% if active_preset == 'year' %}btn-primary{% else %}btn-outline{% endif %}">12 mois</a>
+                    <a href="?preset=year" class="btn btn-xs {% if active_preset == 'year' %}btn-primary{% else %}btn-outline{% endif %}">Cette année</a>
                 </div>
                 <form method="get" class="filters-form">
                     <div class="filter-group">
@@ -76,13 +127,30 @@
                     {% block extra_filters %}{% endblock %}
                     <button type="submit" class="btn btn-primary btn-sm">Filtrer</button>
                 </form>
-                <a href="{% url 'dashboard:export_csv' %}?start={{ start_date }}&end={{ end_date }}"
-                   class="btn btn-sm btn-outline">Exporter CSV</a>
+                <form method="get" action="{% url 'dashboard:export_csv' %}" class="filters-form">
+                    <input type="hidden" name="start" value="{{ start_date }}">
+                    <input type="hidden" name="end" value="{{ end_date }}">
+                    <div class="filter-group">
+                        <label for="export-dataset">Export</label>
+                        <select name="dataset" id="export-dataset">
+                            <option value="consultants">Performance consultants</option>
+                            <option value="revenue">Revenus mensuels</option>
+                            <option value="clients">Classement clients</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-sm btn-outline">Exporter CSV</button>
+                </form>
+                {% endblock %}
             </div>
         </div>
 
         <!-- Contenu de la page -->
         <div class="page-content">
+            {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+            {% endif %}
             {% block content %}{% endblock %}
         </div>
 
@@ -91,6 +159,6 @@
 {% endblock %}
 
 {% block extra_scripts %}
-<script src="{% static 'js/charts.js' %}?v=5"></script>
+<script src="{% static 'js/charts.js' %}?v=12"></script>
 {% block page_scripts %}{% endblock %}
 {% endblock %}

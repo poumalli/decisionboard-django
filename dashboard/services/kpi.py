@@ -14,10 +14,16 @@ Organisation :
 
 from datetime import date, timedelta
 
+from dateutil.relativedelta import relativedelta
 from django.db.models import Avg, Count, Max, Sum
 from django.db.models.functions import TruncMonth
 
+from core.models import Client, Service
 from dw.models import DimClient, DimService, FactSales
+
+# Labels d'affichage pour les codes stockés en base
+_SECTOR_LABELS = dict(Client.SECTOR_CHOICES)
+_CATEGORY_LABELS = dict(Service.CATEGORY_CHOICES)
 
 
 # =============================================
@@ -25,10 +31,22 @@ from dw.models import DimClient, DimService, FactSales
 # =============================================
 
 
-def get_date_range(months_back=12):
-    """Plage de dates par défaut : les N derniers mois."""
-    end = date.today()
-    start = end - timedelta(days=months_back * 30)
+def _compute_workable_hours(start_date, end_date):
+    """Heures ouvrables : jours ouvrés (hors weekend) × 8h."""
+    total_days = (end_date - start_date).days + 1
+    full_weeks, extra_days = divmod(total_days, 7)
+    workdays = full_weeks * 5
+    start_weekday = start_date.weekday()  # 0=Lundi, 6=Dimanche
+    for i in range(extra_days):
+        if (start_weekday + i) % 7 < 5:
+            workdays += 1
+    return max(1, workdays * 8)
+
+
+def get_date_range(months_back=12, today=None):
+    """Plage de dates par défaut : les N derniers mois (mois calendaires exacts)."""
+    end = today or date.today()
+    start = end - relativedelta(months=months_back)
     return start, end
 
 
@@ -51,9 +69,8 @@ def _compute_variation(current, previous):
 
 def _base_qs(start_date, end_date):
     """QuerySet de base filtré par période sur FactSales."""
-    return (
-        FactSales.objects.using("dw")
-        .filter(date__full_date__gte=start_date, date__full_date__lte=end_date)
+    return FactSales.objects.using("dw").filter(
+        date__full_date__gte=start_date, date__full_date__lte=end_date
     )
 
 
@@ -87,9 +104,13 @@ def get_dashboard_summary(start_date, end_date):
 
     return {
         "total_revenue": current_agg["total"] or 0,
-        "revenue_variation": _compute_variation(current_agg["total"], prev_agg["total"]),
+        "revenue_variation": _compute_variation(
+            current_agg["total"], prev_agg["total"]
+        ),
         "total_missions": current_agg["count"],
-        "missions_variation": _compute_variation(current_agg["count"], prev_agg["count"]),
+        "missions_variation": _compute_variation(
+            current_agg["count"], prev_agg["count"]
+        ),
         "average_basket": current_agg["avg"] or 0,
         "basket_variation": _compute_variation(current_agg["avg"], prev_agg["avg"]),
         "active_clients": active_clients,
@@ -113,11 +134,13 @@ def _get_monthly_revenue(start_date, end_date):
     )
 
 
-def _get_top_services(start_date, end_date, limit=5):
-    """Top N services par CA HT."""
+def _get_top_services(start_date, end_date, limit=5, category=None):
+    """Top N services par CA HT, avec filtre optionnel par catégorie."""
+    qs = _base_qs(start_date, end_date)
+    if category:
+        qs = qs.filter(service__category=category)
     return list(
-        _base_qs(start_date, end_date)
-        .values("service__name", "service__category")
+        qs.values("service__name", "service__category")
         .annotate(revenue=Sum("total_ht"), count=Count("id"))
         .order_by("-revenue")[:limit]
     )
@@ -139,8 +162,7 @@ def get_employee_performance(start_date, end_date):
 
 def _get_utilization_rate(start_date, end_date):
     """Taux d'occupation : heures facturées / heures ouvrables."""
-    nb_days = (end_date - start_date).days
-    workable_hours = max(1, int(nb_days * 0.7) * 8)
+    workable_hours = _compute_workable_hours(start_date, end_date)
 
     results = (
         _base_qs(start_date, end_date)
@@ -151,12 +173,14 @@ def _get_utilization_rate(start_date, end_date):
     rates = []
     for r in results:
         rate = r["billed_hours"] / workable_hours * 100 if workable_hours else 0
-        rates.append({
-            "employee": r["employee__full_name"],
-            "billed_hours": r["billed_hours"],
-            "workable_hours": workable_hours,
-            "rate": round(rate, 1),
-        })
+        rates.append(
+            {
+                "employee": r["employee__full_name"],
+                "billed_hours": r["billed_hours"],
+                "workable_hours": workable_hours,
+                "rate": round(rate, 1),
+            }
+        )
 
     avg_rate = sum(r["rate"] for r in rates) / len(rates) if rates else 0
     return {"details": rates, "average": round(avg_rate, 1)}
@@ -204,13 +228,17 @@ def get_revenue_summary(start_date, end_date, category=None):
         .order_by("category")
     )
 
-    # CA par catégorie (doughnut)
+    # CA par catégorie (doughnut) — toujours toutes les catégories pour la vue d'ensemble
     by_category = list(
         _base_qs(start_date, end_date)
         .values("service__category")
         .annotate(revenue=Sum("total_ht"), count=Count("id"))
         .order_by("-revenue")
     )
+    for row in by_category:
+        row["category_display"] = _CATEGORY_LABELS.get(
+            row["service__category"], row["service__category"]
+        )
 
     # CA par client (tableau)
     by_client = list(
@@ -223,16 +251,36 @@ def get_revenue_summary(start_date, end_date, category=None):
         )
         .order_by("-revenue")
     )
+    for row in by_client:
+        row["sector_display"] = _SECTOR_LABELS.get(
+            row["client__sector"], row["client__sector"]
+        )
+
+    # Catégories disponibles pour le filtre : liste de tuples (clé, label)
+    raw_categories = list(
+        DimService.objects.using("dw")
+        .values_list("category", flat=True)
+        .distinct()
+        .order_by("category")
+    )
+    categories = [(c, _CATEGORY_LABELS.get(c, c)) for c in raw_categories]
 
     return {
         "total_revenue": totals["total"] or 0,
         "total_missions": totals["count"] or 0,
         "total_hours": totals["hours"] or 0,
         "revenue_variation": _compute_variation(totals["total"] or 0, prev_revenue),
-        "monthly_revenue": _get_monthly_revenue(start_date, end_date),
+        "monthly_revenue": list(
+            qs.annotate(month=TruncMonth("date__full_date"))
+            .values("month")
+            .annotate(revenue=Sum("total_ht"))
+            .order_by("month")
+        ),
         "by_category": by_category,
         "by_client": by_client,
-        "top_services": _get_top_services(start_date, end_date, limit=6),
+        "top_services": _get_top_services(
+            start_date, end_date, limit=6, category=category
+        ),
         "categories": categories,
         "selected_category": category or "",
     }
@@ -245,8 +293,7 @@ def get_revenue_summary(start_date, end_date, category=None):
 
 def get_consultants_summary(start_date, end_date):
     """Données complètes pour la page Performance consultants."""
-    nb_days = (end_date - start_date).days
-    workable_hours = max(1, int(nb_days * 0.7) * 8)
+    workable_hours = _compute_workable_hours(start_date, end_date)
 
     results = list(
         _base_qs(start_date, end_date)
@@ -264,22 +311,30 @@ def get_consultants_summary(start_date, end_date):
     for r in results:
         rate = r["hours"] / workable_hours * 100 if workable_hours else 0
         revenue_float = float(r["revenue"])
-        consultants.append({
-            "name": r["employee__full_name"],
-            "role": r["employee__role"],
-            "seniority": r["employee__seniority_years"],
-            "revenue": r["revenue"],
-            "missions": r["missions"],
-            "hours": r["hours"],
-            "avg_per_mission": r["avg_per_mission"],
-            "utilization_rate": round(rate, 1),
-            "workable_hours": workable_hours,
-            "ca_per_hour": round(revenue_float / r["hours"], 2) if r["hours"] else 0,
-        })
+        consultants.append(
+            {
+                "name": r["employee__full_name"],
+                "role": r["employee__role"],
+                "seniority": r["employee__seniority_years"],
+                "revenue": r["revenue"],
+                "missions": r["missions"],
+                "hours": r["hours"],
+                "avg_per_mission": r["avg_per_mission"],
+                "utilization_rate": round(rate, 1),
+                "workable_hours": workable_hours,
+                "ca_per_hour": round(revenue_float / r["hours"], 2)
+                if r["hours"]
+                else 0,
+            }
+        )
 
     total_hours = sum(c["hours"] for c in consultants) if consultants else 0
     total_revenue = sum(float(c["revenue"]) for c in consultants) if consultants else 0
-    avg_rate = sum(c["utilization_rate"] for c in consultants) / len(consultants) if consultants else 0
+    avg_rate = (
+        sum(c["utilization_rate"] for c in consultants) / len(consultants)
+        if consultants
+        else 0
+    )
 
     return {
         "consultants": consultants,
@@ -296,7 +351,7 @@ def get_consultants_summary(start_date, end_date):
 # =============================================
 
 
-def get_clients_summary(start_date, end_date, inactivity_months=3):
+def get_clients_summary(start_date, end_date, inactivity_months=3, today=None):
     """Données complètes pour la page Analyse clients."""
 
     # Classement clients par CA
@@ -314,15 +369,17 @@ def get_clients_summary(start_date, end_date, inactivity_months=3):
 
     total_revenue = sum(float(r["revenue"]) for r in ranking) if ranking else 0
 
-    # Pourcentage du CA par client
+    # Pourcentage du CA par client + label secteur lisible
     for r in ranking:
-        r["pct_revenue"] = round(float(r["revenue"]) / total_revenue * 100, 1) if total_revenue else 0
+        r["pct_revenue"] = (
+            round(float(r["revenue"]) / total_revenue * 100, 1) if total_revenue else 0
+        )
+        r["sector_display"] = _SECTOR_LABELS.get(
+            r["client__sector"], r["client__sector"]
+        )
 
     # Clients actifs
-    active_clients = (
-        _base_qs(start_date, end_date)
-        .values("client").distinct().count()
-    )
+    active_clients = _base_qs(start_date, end_date).values("client").distinct().count()
 
     # CA par secteur (doughnut)
     by_sector = list(
@@ -331,6 +388,10 @@ def get_clients_summary(start_date, end_date, inactivity_months=3):
         .annotate(revenue=Sum("total_ht"), client_count=Count("client", distinct=True))
         .order_by("-revenue")
     )
+    for row in by_sector:
+        row["sector_display"] = _SECTOR_LABELS.get(
+            row["client__sector"], row["client__sector"]
+        )
 
     # Fréquence des missions par client
     frequency = list(
@@ -344,7 +405,7 @@ def get_clients_summary(start_date, end_date, inactivity_months=3):
     )
 
     # Clients inactifs (sans N+1, seuil paramétrable)
-    inactive = _get_inactive_clients(inactivity_months)
+    inactive = _get_inactive_clients(inactivity_months, today=today)
 
     return {
         "total_clients": len(ranking),
@@ -357,9 +418,10 @@ def get_clients_summary(start_date, end_date, inactivity_months=3):
     }
 
 
-def _get_inactive_clients(inactivity_months=3):
+def _get_inactive_clients(inactivity_months=3, today=None):
     """Clients sans mission depuis N mois — optimisé sans N+1."""
-    threshold_date = date.today() - timedelta(days=inactivity_months * 30)
+    ref = today or date.today()
+    threshold_date = ref - relativedelta(months=inactivity_months)
 
     all_clients = set(
         DimClient.objects.using("dw").values_list("company_name", flat=True)

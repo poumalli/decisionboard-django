@@ -13,16 +13,25 @@ from datetime import date, datetime, timedelta
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
-from core.models import Client, Employee, Service, Appointment, Invoice
+from core.models import Client, Employee, Service, Appointment
 from dw.models import DimDate, DimClient, DimEmployee, DimService, FactSales
 
 logger = logging.getLogger(__name__)
 
 # Noms des mois en français
 MONTH_NAMES = {
-    1: "Janvier", 2: "Février", 3: "Mars", 4: "Avril",
-    5: "Mai", 6: "Juin", 7: "Juillet", 8: "Août",
-    9: "Septembre", 10: "Octobre", 11: "Novembre", 12: "Décembre",
+    1: "Janvier",
+    2: "Février",
+    3: "Mars",
+    4: "Avril",
+    5: "Mai",
+    6: "Juin",
+    7: "Juillet",
+    8: "Août",
+    9: "Septembre",
+    10: "Octobre",
+    11: "Novembre",
+    12: "Décembre",
 }
 
 
@@ -65,27 +74,27 @@ class Command(BaseCommand):
         """
         today = date.today()
         start = today - timedelta(days=730)  # ~2 ans en arrière
-        end = today + timedelta(days=90)     # 3 mois dans le futur
+        end = today + timedelta(days=90)  # 3 mois dans le futur
 
         # Récupérer les dates déjà existantes pour éviter les doublons
-        existing = set(
-            DimDate.objects.using("dw").values_list("full_date", flat=True)
-        )
+        existing = set(DimDate.objects.using("dw").values_list("full_date", flat=True))
 
         new_dates = []
         current = start
         while current <= end:
             if current not in existing:
-                new_dates.append(DimDate(
-                    full_date=current,
-                    year=current.year,
-                    quarter=(current.month - 1) // 3 + 1,
-                    month=current.month,
-                    month_name=MONTH_NAMES[current.month],
-                    day=current.day,
-                    day_of_week=current.weekday() + 1,  # 1=Lundi, 7=Dimanche
-                    is_weekend=current.weekday() >= 5,
-                ))
+                new_dates.append(
+                    DimDate(
+                        full_date=current,
+                        year=current.year,
+                        quarter=(current.month - 1) // 3 + 1,
+                        month=current.month,
+                        month_name=MONTH_NAMES[current.month],
+                        day=current.day,
+                        day_of_week=current.weekday() + 1,  # 1=Lundi, 7=Dimanche
+                        is_weekend=current.weekday() >= 5,
+                    )
+                )
             current += timedelta(days=1)
 
         if new_dates:
@@ -170,15 +179,11 @@ class Command(BaseCommand):
         """
         Extraction : lit les missions réalisées + leur facture depuis l'OLTP.
         Transformation : joint les données mission/facture, résout les FK du DW.
-        Chargement : crée les faits dans le DW.
+        Chargement : crée les nouveaux faits, met à jour is_paid sur les existants.
         """
         # Pré-charger les mappings OLTP ID -> DW ID pour les dimensions
-        date_map = dict(
-            DimDate.objects.using("dw").values_list("full_date", "id")
-        )
-        client_map = dict(
-            DimClient.objects.using("dw").values_list("source_id", "id")
-        )
+        date_map = dict(DimDate.objects.using("dw").values_list("full_date", "id"))
+        client_map = dict(DimClient.objects.using("dw").values_list("source_id", "id"))
         employee_map = dict(
             DimEmployee.objects.using("dw").values_list("source_id", "id")
         )
@@ -187,33 +192,44 @@ class Command(BaseCommand):
         )
 
         # Extraction : missions réalisées avec leur facture
-        appointments = (
-            Appointment.objects
-            .filter(status="realise")
-            .select_related("client", "employee", "service", "invoice")
+        appointments = Appointment.objects.filter(status="realise").select_related(
+            "client", "employee", "service", "invoice"
         )
 
-        # IDs déjà chargés (pour éviter les doublons)
-        existing_ids = set(
-            FactSales.objects.using("dw").values_list(
-                "source_appointment_id", flat=True
+        # Faits existants : source_id → {pk, is_paid} pour détecter les changements
+        existing_facts = {
+            f["source_appointment_id"]: f
+            for f in FactSales.objects.using("dw").values(
+                "id", "source_appointment_id", "is_paid"
             )
-        )
+        }
 
         new_facts = []
+        facts_to_update = []
         skipped = 0
 
         for apt in appointments:
-            # Ignorer si déjà chargé
-            if apt.id in existing_ids:
-                skipped += 1
-                continue
-
             # Vérifier que la facture existe
             try:
                 invoice = apt.invoice
             except Appointment.invoice.RelatedObjectDoesNotExist:
                 skipped += 1
+                continue
+
+            new_is_paid = invoice.status == "payee"
+
+            # Fait déjà chargé : mettre à jour is_paid si le statut a changé
+            if apt.id in existing_facts:
+                existing = existing_facts[apt.id]
+                if existing["is_paid"] != new_is_paid:
+                    facts_to_update.append(
+                        FactSales(
+                            id=existing["id"],
+                            is_paid=new_is_paid,
+                        )
+                    )
+                else:
+                    skipped += 1
                 continue
 
             # Résoudre les clés étrangères du DW
@@ -227,22 +243,27 @@ class Command(BaseCommand):
                 skipped += 1
                 continue
 
-            new_facts.append(FactSales(
-                date_id=dim_date_id,
-                client_id=dim_client_id,
-                employee_id=dim_employee_id,
-                service_id=dim_service_id,
-                source_appointment_id=apt.id,
-                duration_hours=apt.duration_hours,
-                unit_price=apt.employee.hourly_rate,
-                total_ht=invoice.amount_ht,
-                total_ttc=invoice.amount_ttc,
-                is_paid=(invoice.status == "payee"),
-            ))
+            new_facts.append(
+                FactSales(
+                    date_id=dim_date_id,
+                    client_id=dim_client_id,
+                    employee_id=dim_employee_id,
+                    service_id=dim_service_id,
+                    source_appointment_id=apt.id,
+                    duration_hours=apt.duration_hours,
+                    unit_price=apt.employee.hourly_rate,
+                    total_ht=invoice.amount_ht,
+                    total_ttc=invoice.amount_ttc,
+                    is_paid=new_is_paid,
+                )
+            )
 
         if new_facts:
             FactSales.objects.using("dw").bulk_create(new_facts)
+        if facts_to_update:
+            FactSales.objects.using("dw").bulk_update(facts_to_update, ["is_paid"])
 
         self.stdout.write(
-            f"  FactSales : {len(new_facts)} faits créés, {skipped} ignorés"
+            f"  FactSales : {len(new_facts)} faits créés, "
+            f"{len(facts_to_update)} mis à jour (is_paid), {skipped} ignorés"
         )

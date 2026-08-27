@@ -1,0 +1,65 @@
+{% extends "core/base_data.html" %}
+
+{% block title %}{{ client.company_name }} — DecisionBoard{% endblock %}
+{% block page_title %}Gestion des données — Clients{% endblock %}
+
+{% block data_actions %}
+<a href="{% url 'core:client_update' client.pk %}" class="btn btn-sm btn-outline">Modifier</a>
+<a href="{% url 'core:client_list' %}" class="btn btn-sm btn-outline">Retour à la liste</a>
+{% endblock %}
+
+{% block data_content %}
+<div class="table-card">
+    <h3>{{ client.company_name }}</h3>
+    <table class="data-table">
+        <tbody>
+            <tr><td>Contact</td><td>{{ client.contact_name }}</td></tr>
+            <tr><td>Email</td><td>{{ client.email }}</td></tr>
+            <tr><td>Téléphone</td><td>{{ client.phone|default:"—" }}</td></tr>
+            <tr><td>Adresse</td><td>{{ client.address|default:"—" }}{% if client.city %}, {{ client.city }}{% endif %}</td></tr>
+            <tr><td>Secteur</td><td><span class="badge badge-category">{{ client.get_sector_display }}</span></td></tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="table-card">
+    <h3>Historique des missions ({{ appointments|length }})</h3>
+    {% if appointments %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th class="sortable">Date</th>
+                <th class="sortable">Service</th>
+                <th class="sortable">Consultant</th>
+                <th class="sortable text-right" data-sort-num>Durée (h)</th>
+                <th class="text-center">Statut</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for appointment in appointments %}
+            <tr>
+                <td>{{ appointment.date }}</td>
+                <td>{{ appointment.service }}</td>
+                <td>{{ appointment.employee }}</td>
+                <td class="text-right">{{ appointment.duration_hours }}h</td>
+                <td class="text-center">
+                    {% if appointment.status == "realise" %}
+                    <span class="badge badge-success">{{ appointment.get_status_display }}</span>
+                    {% elif appointment.status == "annule" %}
+                    <span class="badge badge-danger">{{ appointment.get_status_display }}</span>
+                    {% else %}
+                    <span class="badge badge-warning">{{ appointment.get_status_display }}</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-title">Aucune mission</div>
+        <div class="empty-state-text">Ce client n'a pas encore de mission enregistrée.</div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "core/base_data.html" %}
+
+{% block title %}{% if object %}Modifier{% else %}Nouvelle{% endif %} facture — DecisionBoard{% endblock %}
+{% block page_title %}Gestion des données — Factures{% endblock %}
+
+{% block data_content %}
+<div class="table-card" style="max-width:560px;">
+    <h3>{% if object %}Modifier la facture{% else %}Nouvelle facture{% endif %}</h3>
+    <form method="post">
+        {% csrf_token %}
+        {% for field in form %}
+        <div class="form-group">
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}
+            <div class="setting-error">{{ field.errors.0 }}</div>
+            {% endif %}
+        </div>
+        {% endfor %}
+        <div style="display:flex; gap:8px; margin-top:6px;">
+            <button type="submit" class="btn btn-primary">Enregistrer</button>
+            <a href="{% url 'core:invoice_list' %}" class="btn btn-outline">Annuler</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
