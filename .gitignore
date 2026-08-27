@@ -60,6 +60,3 @@ docs/_build/
 
 # PyPI
 .pypirc
-
-# Claude Code local tooling (may contain unrelated worktrees)
-.claude/
